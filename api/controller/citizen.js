@@ -4,6 +4,54 @@ const Citizen = require('../models/citizen')
 const bcrypt = require('bcrypt') // <-- for hashing passwords
 const jwt = require('jsonwebtoken') // <-- library for json webtokens. 
 
+
+/**
+ * @swagger
+ * /citizen/signup:
+ *   post:
+ *     summary: Register a new citizen
+ *     tags: [Citizen]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CitizenSignup'
+ *     responses:
+ *       201:
+ *         description: Citizen created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *       409:
+ *         description: Email exists already
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ */
 exports.signup = (req, res, next) => {
     Citizen.find({email: req.body.email})
         .exec()
@@ -13,11 +61,12 @@ exports.signup = (req, res, next) => {
             })
             
             // New email, hash password and attempt to 
-            bcrypt.hash(req.body.password, 10, (err, hash) => {
+            bcrypt.hash(req.body.password,  10, (err, hash) => {
                 if(err) return res.status(500).json({error: err}) 
                 
                 const citizen = new Citizen({
                     _id: new mongoose.Types.ObjectId(),
+                    deviceId: req.body.deviceId,
                     birthdate: req.body.birthdate,
                     name: req.body.name,
                     email: req.body.email,
@@ -30,7 +79,8 @@ exports.signup = (req, res, next) => {
                     .then(result => {
                         res.status(201).json({
                             message: 'citizen created',
-                            id: citizen._id
+                            id: citizen._id,
+                            citizen: citizen
                         })
                     })
                     .catch(err => {
@@ -82,3 +132,61 @@ exports.delete = (req, res, next) => {
             res.status(500).json({error: err})
         })
 }
+
+exports.get_all_citizens = (req, res, next) => {
+    const { page, limit } = req.query;
+    let query = {};
+  
+    if (page && limit) {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      query = { limit: parseInt(limit), skip };
+    }
+  
+    Citizen.find({}, null, query)
+      .then(citizens => {
+        if (page && limit) {
+          return Citizen.countDocuments()
+            .then(totalItems => {
+              const response = {
+                currentPage: parseInt(page),
+                totalItems,
+                totalPages: Math.ceil(totalItems / parseInt(limit)),
+                itemsPerPage: parseInt(limit),
+                citizens: citizens
+              };
+              res.status(200).send(response);
+            });
+        } else {
+          const response = {
+            currentPage: 1,
+            totalItems: citizens.length,
+            totalPages: 1,
+            itemsPerPage: citizens.length,
+            citizens: citizens
+          };
+          res.status(200).send(response);
+        }
+      })
+      .catch(error => {
+        res.status(500).send(error);
+      });
+  };
+
+  exports.get_citizen = (req, res, next) => {
+    Citizen.findById(req.params.citizenId)
+        .exec()
+        .then(citizen => {
+            if(!citizen) { // <-- if citizen is null. 
+                return res.status(404).json({message: "Citizen not found"})
+            }
+            res.status(200).json({
+                citizen: citizen
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}
+

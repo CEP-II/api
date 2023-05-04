@@ -1,55 +1,131 @@
 const mongoose = require('mongoose')
 
-const Timestamp = require('../models/timestamp')
+const Timestamp = require('../models/timestamp');
+const Citizen = require('../models/citizen');
 
+/**
+ * @swagger
+ * /timestamps:
+ *   get:
+ *     summary: Get all timestamps
+ *     description: Retrieve a list of all timestamps with optional pagination
+ *     tags:
+ *       - Timestamps
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: The page number to retrieve
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: The number of items to return per page
+ *     responses:
+ *       200:
+ *         description: A list of timestamps
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 currentPage:
+ *                   type: integer
+ *                 totalItems:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 itemsPerPage:
+ *                   type: integer
+ *                 timestamps:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       startTime:
+ *                         type: string
+ *                         format: date-time
+ *                       endTime:
+ *                         type: string
+ *                         format: date-time
+ *                       citizen:
+ *                         type: string
+ */
 exports.get_all_timestamps = (req, res, next) => {
-    Timestamp.find()
-        .select("-__v")
-        .populate('citizen') // <-- get all the information related to citizen. Can pass 2nd parameter to select only specific fields. TODO sort this by name or something
-        .exec()
-        .then(docs => {
-            res.status(200).json({
-                count: docs.length,
-                timestamps: docs.map(doc => {
-                    return {
-                        _id: doc._id,
-                        start: doc.startTime,
-                        end: doc.endTime,
-                        citizen: doc.citizen,
-                    }
-                }),
-            })
-        })
-        .catch(err => {
-            res.status(500).json({error:err})
-        })
-}
+    const { page, limit } = req.query;
+    let query = {};
+  
+    if (page && limit) {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      query = { limit: parseInt(limit), skip };
+    }
+  
+    Timestamp.find({}, null, query)
+      .then(timestamps => {
+        if (page && limit) {
+          return Timestamp.countDocuments()
+            .then(totalItems => {
+              const response = {
+                currentPage: parseInt(page),
+                totalItems,
+                totalPages: Math.ceil(totalItems / parseInt(limit)),
+                itemsPerPage: parseInt(limit),
+                timestamps: timestamps
+              };
+              res.status(200).send(response);
+            });
+        } else {
+          const response = {
+            currentPage: 1,
+            totalItems: timestamps.length,
+            totalPages: 1,
+            itemsPerPage: timestamps.length,
+            timestamps: timestamps
+          };
+          res.status(200).send(response);
+        }
+      })
+      .catch(error => {
+        res.status(500).send(error);
+      });
+  };
+  
 
 exports.create_timestamp = (req, res, next) => {
-
-    const timestamp = new Timestamp({
-        _id: new mongoose.Types.ObjectId(),
-        startTime: req.body.startTime,
-        endTime: req.body.endTime,
-        citizen: req.body.citizen
-    })
-
-    timestamp.save()
-        .then(result => {
-            console.log(result);
-            res.status(201).json({
-                message: "Timestamp stored",
-                createdTimestamp: {
-                    _id: result._id,
-                    startTime: result.startTime,
-                    endTime: result.endTime,
-                    citizen: result.citizen
-                },
+    // find citizen id from device id.
+    Citizen.findOne({deviceId: req.body.deviceId})
+        .exec()
+        .then(citizen => {
+            if(!citizen) return res.status(404).json({
+                message: "device id not found",
             })
-        })
-        .catch(err => {
-            console.log(err)
-            res.status(500).json({error: err})
+            
+            const timestamp = new Timestamp({
+                _id: new mongoose.Types.ObjectId(),
+                startTime: req.body.startTime,
+                endTime: req.body.endTime,
+                deviceId: req.body.deviceId,
+                citizen: citizen
+            })
+            // Should check that the citizen id is valid (in DB)? Or is this waste of ressources
+            timestamp.save()
+                .then(result => {
+                    res.status(201).json({
+                        message: "Timestamp stored",
+                        createdTimestamp: {
+                            _id: result._id,
+                            startTime: result.startTime,
+                            endTime: result.endTime,
+                            deviceId: result.deviceId,
+                            citizen: result.citizen
+                        },
+                    })
+                })
+                .catch(err => {
+                    console.log(err)
+                    res.status(500).json({error: err})
+                })
         })
 }
 
@@ -87,3 +163,4 @@ exports.delete_timestamp = (req, res, next) => {
         })
     })
 }
+

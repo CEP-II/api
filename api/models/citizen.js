@@ -6,11 +6,17 @@ const citizenSchema = mongoose.Schema({
     birthdate: {        // <-- better than to store age, which changes over time. Have to compute age from this tho. 
         type: Date,
         required: true
+        // add validator logic here for minimum? https://stackoverflow.com/questions/66927667/mongoose-schema-set-min-and-max-dates
     },
 
     name: {
         type: String,
         required: true
+    },
+
+    deviceId: {
+        type: String,
+        required: true,
     },
 
     address: {
@@ -41,6 +47,7 @@ const citizenSchema = mongoose.Schema({
     password: {
         type: String,
         required: true,
+        // validater logic
     }
 })
 

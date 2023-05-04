@@ -2,6 +2,5 @@
     "env": {
         "MONGO_ATLAS_PW": "nightassist",
         "JWT_KEY": "secret"
-
     }
 }

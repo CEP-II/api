@@ -164,24 +164,6 @@ mongoose.connect('mongodb+srv://nightassist:' +
 
 
 // middleware below, sequential flow
-                
-// Our RESTful API should not run into CORS errors (cross-origin ressource sharing), which are caused by browsers. 
-// We adjust the header of response to give access for different origin server/clients. 
-// app.use((req, res, next) => {
-//     res.header('Access-Control-Allow-Origin', '*') // give access to any origin '*'
-//     res.header('Access-Control-Allow-Headers', 
-//     'Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials') // which kind of headers may be sent with req/res
-
-//     // browser always sends option request first when sending post/put requests (to see what it is allowed to do basically)
-//     if(req.method === 'OPTIONS') {      
-//         res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET')
-//         return res.status(200).json({}) // we don't need to go to the routes. Option request is just to figure out "rights"/"options" 
-//     }
-
-//     // Currently locking incoming request
-//     next();
-// })
-
 app.use(cors(corsOptions));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));

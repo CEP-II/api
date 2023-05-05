@@ -1,16 +1,17 @@
 const express = require('express')
 const router = express.Router()
 
-const checkAuth = require('../middleware/checkAuth')
 const TimestampController = require("../controller/timestamps")
 
+const authorizeRoles = require('../middleware/authorizeRoles')
 
-router.get('/', checkAuth, TimestampController.get_all_timestamps)
+
+router.get('/', authorizeRoles(['user', 'admin']), TimestampController.get_all_timestamps)
 
 router.post('/', TimestampController.create_timestamp)
 
-router.get('/:timestampId', checkAuth, TimestampController.get_timestamp)
+router.get('/:timestampId', authorizeRoles(['user', 'admin']), TimestampController.get_timestamp)
 
-router.delete('/:timestampId', checkAuth, TimestampController.delete_timestamp)
+router.delete('/:timestampId', authorizeRoles(['admin']), TimestampController.delete_timestamp)
 
 module.exports = router

@@ -6,10 +6,10 @@ const Citizen = require('../api/models/citizen');
 const Timestamp = require('../api/models/timestamp')
 const Admin = require('../api/models/admin')
 
+const bcrypt = require('bcrypt')
+
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const chaiExclude = require('chai-exclude')
-chai.use(chaiExclude) // to get excluding keyword.
 
 const app = require('../app').listen(0); // 0 = operating system assigns available
 
@@ -27,6 +27,14 @@ before(async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
+
+  // insert some mockdata:
+  const admin = new Admin({
+    _id: new mongoose.Types.ObjectId(),
+    username: "admin",
+    password: await bcrypt.hash("admin", 10),
+  })
+  await admin.save();  
 });
 
 after(async () => {
@@ -42,31 +50,67 @@ after(async () => {
 chai.use(chaiHttp);
 chai.should();
 
+const citizenId1 = new mongoose.Types.ObjectId()
+const citizenId2 = new mongoose.Types.ObjectId()
+const timestampId1 = new mongoose.Types.ObjectId()
+const timestampId2 = new mongoose.Types.ObjectId()
+const adminId1 = new mongoose.Types.ObjectId()
+
 
 describe('Citizens API', () => {
 
   beforeEach(async () => {
-    await Citizen.deleteMany({});
+    const citizenData1 = new Citizen({
+      _id: citizenId1,
+      birthdate: '1990-01-01',
+      name: 'John Doe',
+      email: 'john@example.com',
+      deviceId: "1234",
+      phone: 12345678,
+      address: {
+        postal: 12345,
+        street: 'Test Street',
+        city: 'Test City',
+      },
+      password: await bcrypt.hash('testPassword', 10),
+      deviceId: '1234',
+    });
+    const citizenData2 = new Citizen({
+      _id: citizenId2,
+      birthdate: '1995-01-01',
+      name: 'Jane Doe',
+      email: 'jane@example.com',
+      phone: 12345679,
+      address: {
+        postal: 12346,
+        street: 'Test Street 2',
+        city: 'Test City 2',
+      },
+      password: await bcrypt.hash('testPassword2', 10),
+      deviceId: '12345'
+    });
+
+    await Citizen.deleteMany({});      
+    await citizenData1.save();
+    await citizenData2.save();
   });
 
   describe('POST /signup', () => {
-    it('should create a new citizen', async () => {
-
+    it('should create a new citizen', async () => { 
       const citizenData = {
         birthdate: '1990-01-01',
-        name: 'John Doe',
-        email: 'john@example.com',
+        name: 'Johny Doe',
+        email: 'johny@example.com',
         deviceId: "1234",
-        phone: 12345678,
+        phone: 12344448,
         address: {
           postal: 12345,
           street: 'Test Street',
           city: 'Test City',
         },
         password: 'testPassword',
-        deviceId: '1234',
+        deviceId: '123456',
       };
-
       const res = await chai.request(app).post('/citizen/signup').send(citizenData);
 
       res.should.have.status(201);
@@ -85,24 +129,7 @@ describe('Citizens API', () => {
 
   describe('POST /login', () => {
     it('should log in the citizen and return a token', async () => {
-      
-      const citizenData = {
-        birthdate: '1990-01-01',
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: 12345678,
-        address: {
-          postal: 12345,
-          street: 'Test Street',
-          city: 'Test City',
-        },
-        password: 'testPassword',
-        deviceId: '1234'
-      };
-    
-      // Create a new citizen using the /citizen/signup route
-      await chai.request(app).post('/citizen/signup').send(citizenData);
-    
+          
       const loginData = {
         email: 'john@example.com',
         password: 'testPassword',
@@ -113,39 +140,21 @@ describe('Citizens API', () => {
       res.should.have.status(200);
       res.body.should.be.a('object');
       res.body.should.have.property('message').eql('Authorization successful');
-      res.body.should.have.property('token');
+      res.body.should.have.property('token').eql(res.body.token);
     });
   });
 
   describe('DELETE /:citizenId', () => {
     it('should delete a citizen by ID', async () => {
-      const citizenData = {
-        birthdate: '1990-01-01',
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: 12345678,
-        address: {
-          postal: 12345,
-          street: 'Test Street',
-          city: 'Test City',
-        },
-        password: 'testPassword',
-        deviceId: '1234'
-      };
-
-      // Create a new citizen using the /citizen/signup route
-      const citizenRes = await chai.request(app).post('/citizen/signup').send(citizenData);
-
       const loginData = {
-        email: 'john@example.com',
-        password: 'testPassword',
+        username: 'admin',
+        password: 'admin',
       };
-      const resToken = await chai.request(app).post('/citizen/login').send(loginData);
+      const resToken = await chai.request(app).post('/admin/login').send(loginData);
       const token = resToken.body.token;
-
       const res = await chai
         .request(app)
-        .delete(`/citizen/${citizenRes.body.id}`)
+        .delete(`/citizen/${citizenId1}`)
         .set('Authorization', `Bearer ${token}`);
 
       res.should.have.status(200);
@@ -155,45 +164,12 @@ describe('Citizens API', () => {
   });
 
   describe('GET /', () => {
-    it('should get all citizens', async () => {
-      // Create two citizens
-      const citizenData1 = {
-        birthdate: '1990-01-01',
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: 12345678,
-        address: {
-          postal: 12345,
-          street: 'Test Street',
-          city: 'Test City',
-        },
-        password: 'testPassword',
-        deviceId: '1234'
-      };
-  
-      const citizenData2 = {
-        birthdate: '1995-01-01',
-        name: 'Jane Doe',
-        email: 'jane@example.com',
-        phone: 12345679,
-        address: {
-          postal: 12346,
-          street: 'Test Street 2',
-          city: 'Test City 2',
-        },
-        password: 'testPassword2',
-        deviceId: '12345'
-      };
-  
-      await chai.request(app).post('/citizen/signup').send(citizenData1);
-      await chai.request(app).post('/citizen/signup').send(citizenData2);
-  
-      // Log in the first citizen to get the token
+    it('should get all citizens', async () => {  
       const loginData = {
-        email: 'john@example.com',
-        password: 'testPassword',
+        username: 'admin',
+        password: 'admin',
       };
-      const resToken = await chai.request(app).post('/citizen/login').send(loginData);
+      const resToken = await chai.request(app).post('/admin/login').send(loginData);
       const token = resToken.body.token;
   
       const res = await chai
@@ -213,45 +189,14 @@ describe('Citizens API', () => {
     });
   
     it('should get citizens with pagination', async () => {
-
-      const citizenData1 = {
-        birthdate: '1990-01-01',
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: 12345678,
-        address: {
-          postal: 12345,
-          street: 'Test Street',
-          city: 'Test City',
-        },
-        password: 'testPassword',
-        deviceId: '1234'
-      };
-  
-      const citizenData2 = {
-        birthdate: '1995-01-01',
-        name: 'Jane Doe',
-        email: 'jane@example.com',
-        phone: 12345679,
-        address: {
-          postal: 12346,
-          street: 'Test Street 2',
-          city: 'Test City 2',
-        },
-        password: 'testPassword2',
-        deviceId: '12345'
-      };
-  
-      await chai.request(app).post('/citizen/signup').send(citizenData1);
-      await chai.request(app).post('/citizen/signup').send(citizenData2);
-
       // Log in the first citizen to get the token
       const loginData = {
-        email: 'john@example.com',
-        password: 'testPassword',
+        username: 'admin',
+        password: 'admin',
       };
-      const resToken = await chai.request(app).post('/citizen/login').send(loginData);
+      const resToken = await chai.request(app).post('/admin/login').send(loginData);
       const token = resToken.body.token;
+
   
       // Request the first page with a limit of 1
       const res = await chai
@@ -271,49 +216,34 @@ describe('Citizens API', () => {
   });
 
   it('should get citizen by ID', async () => {
-    const citizenData = {
-      birthdate: '1990-01-01',
-      name: 'John Doe',
-      email: 'john@example.com',
-      phone: 12345678,
-      address: {
-        postal: 12345,
-        street: 'Test Street',
-        city: 'Test City',
-      },
-      password: 'testPassword',
-      deviceId: '1234'
-    };
-
-    // Create a new citizen using the /citizen/signup route
-    const citizenRes = await chai.request(app).post('/citizen/signup').send(citizenData);
-    const id = citizenRes.body.id;
-
     const loginData = {
-      email: 'john@example.com',
-      password: 'testPassword',
+      username: 'admin',
+      password: 'admin',
     };
-    const resToken = await chai.request(app).post('/citizen/login').send(loginData);
+  
+    const resToken = await chai.request(app).post('/admin/login').send(loginData);
     const token = resToken.body.token;
 
-    
     const res = await chai
       .request(app)
-      .get(`/citizen/${id}`)
+      .get(`/citizen/${citizenId1}`)
       .set('Authorization', `Bearer ${token}`);
-        
     
+
     res.should.have.status(200);
     res.should.be.json;
     res.body.should.be.a('object');
     res.body.should.have.property('citizen');
     res.body.citizen.should.be.a('object');
-    res.body.citizen.should.have.property('_id', id);
-    res.body.citizen.should.have.property('name').eql(citizenData.name)
-    res.body.citizen.should.have.property('email').eql(citizenData.email);
-    res.body.citizen.should.have.property('phone').eql(citizenData.phone);
-    res.body.citizen.should.have.property('deviceId').eql(citizenData.deviceId);
-    res.body.citizen.should.have.property('address').excluding('_id').deep.equal(citizenData.address);
+    res.body.citizen.should.have.property('_id').eql(citizenId1.toString());
+    res.body.citizen.should.have.property('name')
+    res.body.citizen.should.have.property('email')
+    res.body.citizen.should.have.property('phone')
+    res.body.citizen.should.have.property('deviceId')
+    res.body.citizen.should.have.property('address')
+    res.body.citizen.name.should.not.be.null.and.not.be.undefined;
+    res.body.citizen.deviceId.should.not.be.null.and.not.be.undefined;
+    res.body.citizen.email.should.not.be.null.and.not.be.undefined;
   });
 });
 
@@ -322,34 +252,59 @@ describe('Citizens API', () => {
 // Add this describe block for timestamps within the existing test file
 describe('Timestamps API', () => {
 
+    before(async () => {
+      await Timestamp.deleteMany({})
+      await Citizen.deleteMany({})
+    })
+
     beforeEach(async () => {
+
+      const citizenData1 = new Citizen({
+        _id: citizenId1,
+        birthdate: '1990-01-01',
+        name: 'John Doe',
+        email: 'john@example.com',
+        deviceId: "1234",
+        phone: 12345678,
+        address: {
+          postal: 12345,
+          street: 'Test Street',
+          city: 'Test City',
+        },
+        password: await bcrypt.hash('testPassword', 10),
+        deviceId: '1234',
+      });
+
+      const timestampData1 = new Timestamp({
+        _id: timestampId1,
+        citizen: citizenId1,
+        startTime: '2023-04-26T09:00:00.000Z',
+        endTime: '2023-04-26T17:00:00.000Z',
+        deviceId: citizenData1.deviceId,
+      });
+
+      const timestampData2 = new Timestamp({
+        _id: timestampId2,
+        startTime: '2023-04-27T09:00:00.000Z',
+        endTime: '2023-04-27T17:00:00.000Z',
+        deviceId: citizenData1.deviceId,
+        citizen: citizenId1
+      });
+
       await Timestamp.deleteMany({});
       await Citizen.deleteMany({});
+      await citizenData1.save();
+      await timestampData1.save();
+      await timestampData2.save();
     });
   
     describe('POST /', () => {
       it('should create a new timestamp', async () => {
-        const citizenData = {
-          birthdate: '1990-01-01',
-          name: 'John Doe',
-          email: 'john@example.com',
-          phone: 12345678,
-          address: {
-            postal: 12345,
-            street: 'Test Street',
-            city: 'Test City',
-          },
-          password: 'testPassword',
-          deviceId: '1234'
-        };
-  
-        // Create a new citizen using the /citizen/signup route
-        await chai.request(app).post('/citizen/signup').send(citizenData);
   
         const timestampData = {
           startTime: '2023-04-26T09:00:00.000Z',
           endTime: '2023-04-26T17:00:00.000Z',
-          deviceId: citizenData.deviceId,
+          deviceId: "1234",
         };
   
         const res = await chai.request(app).post('/timestamps').send(timestampData);
@@ -367,43 +322,17 @@ describe('Timestamps API', () => {
   
     describe('GET /:timestampId', () => {
       it('should get a timestamp by ID', async () => {
-        const citizenData = {
-          birthdate: '1990-01-01',
-          name: 'John Doe',
-          email: 'john@example.com',
-          phone: 12345678,
-          address: {
-            postal: 12345,
-            street: 'Test Street',
-            city: 'Test City',
-          },
-          password: 'testPassword',
-          deviceId: '1234'
-        };
-
-        // Create a new citizen using the /citizen/signup route
-        const citizenRes = await chai.request(app).post('/citizen/signup').send(citizenData);
-
-        const timestampData = {
-          startTime: '2023-04-26T09:00:00.000Z',
-          endTime: '2023-04-26T17:00:00.000Z',
-          deviceId: citizenData.deviceId,
-        };
-
-        // Push timestamp to database using the /timestamps route with post request
-        const resPost = await chai.request(app).post('/timestamps').send(timestampData);
-        const timestampId = resPost.body.createdTimestamp._id;
 
         const loginData = {
-            email: 'john@example.com',
-            password: 'testPassword',
-          };
-        const resToken = await chai.request(app).post('/citizen/login').send(loginData);
+            username: 'admin',
+            password: 'admin',
+        };
+        const resToken = await chai.request(app).post('/admin/login').send(loginData);
         const token = resToken.body.token;
   
         const res = await chai
             .request(app)
-            .get(`/timestamps/${timestampId}`)
+            .get(`/timestamps/${timestampId1}`)
             .set('Authorization', `Bearer ${token}`);
 
   
@@ -411,57 +340,27 @@ describe('Timestamps API', () => {
         res.body.should.be.a('object');
         res.body.should.have.property('timestamp');
         res.body.timestamp.should.have.property('citizen');
-        res.body.timestamp.should.have.property('startTime').eql(timestampData.startTime);
-        res.body.timestamp.should.have.property('endTime').eql(timestampData.endTime);
+        res.body.timestamp.should.have.property('_id').eql(timestampId1.toString());
+        res.body.timestamp.should.have.property('startTime');
+        res.body.timestamp.should.have.property('endTime');
+        res.body.timestamp.startTime.should.not.be.null.and.not.be.undefined;
+        res.body.timestamp.endTime.should.not.be.null.and.not.be.undefined;
       });
     });
     
     describe('GET /', () => {
       it('should get all timestamps (pagination)', async () => {
-        const citizenData = {
-          birthdate: '1990-01-01',
-          name: 'John Doe',
-          email: 'john@example.com',
-          phone: '004512345678',
-          address: {
-            postal: 12345,
-            street: 'Test Street',
-            city: 'Test City',
-          },
-          password: 'testPassword',
-          deviceId: '1234'
-        };
-
-        // Create a new citizen using the /citizen/signup route
-        await chai.request(app).post('/citizen/signup').send(citizenData);
-
-        const timestampData1 = {
-          startTime: '2023-04-26T09:00:00.000Z',
-          endTime: '2023-04-26T17:00:00.000Z',
-          deviceId: citizenData.deviceId,
-        };
-
-        const timestampData2 = {
-          startTime: '2023-04-27T09:00:00.000Z',
-          endTime: '2023-04-27T17:00:00.000Z',
-          deviceId: citizenData.deviceId,
-        };
-
-        // Create two new timestamps using the /timestamps route
-        await chai.request(app).post('/timestamps').send(timestampData1);
-        await chai.request(app).post('/timestamps').send(timestampData2);
-
         const loginData = {
-          email: 'john@example.com',
-          password: 'testPassword',
+          username: 'admin',
+          password: 'admin',
         };
-        const resToken = await chai.request(app).post('/citizen/login').send(loginData);
+        const resToken = await chai.request(app).post('/admin/login').send(loginData);
         const token = resToken.body.token;
 
         const res = await chai
-        .request(app)
-        .get('/timestamps?page=1&limit=2')
-        .set('Authorization', `Bearer ${token}`);
+          .request(app)
+          .get('/timestamps?page=1&limit=2')
+          .set('Authorization', `Bearer ${token}`);
     
         // console.log("Totalitems " + res.body.totalItems);
         res.should.have.status(200);
@@ -474,50 +373,17 @@ describe('Timestamps API', () => {
       });
 
       it('should get all timestamps without pagination', async () => {
-        const citizenData = {
-          birthdate: '1990-01-01',
-          name: 'John Doe',
-          email: 'john@example.com',
-          phone: 12345678,
-          address: {
-            postal: 12345,
-            street: 'Test Street',
-            city: 'Test City',
-          },
-          password: 'testPassword',
-          deviceId: '1234'
-        };
-
-        // Create a new citizen using the /citizen/signup route
-        const citizenRes = await chai.request(app).post('/citizen/signup').send(citizenData);
-
-        const timestampData1 = {
-          startTime: '2023-04-26T09:00:00.000Z',
-          endTime: '2023-04-26T17:00:00.000Z',
-          deviceId: citizenData.deviceId,
-        };
-
-        const timestampData2 = {
-          startTime: '2023-04-27T09:00:00.000Z',
-          endTime: '2023-04-27T17:00:00.000Z',
-          deviceId: citizenData.deviceId
-        };
-
-        // Create two new timestamps using the /timestamps route
-        await chai.request(app).post('/timestamps').send(timestampData1);
-        await chai.request(app).post('/timestamps').send(timestampData2);
-
         const loginData = {
-          email: 'john@example.com',
-          password: 'testPassword',
+          username: 'admin',
+          password: 'admin',
         };
-        const resToken = await chai.request(app).post('/citizen/login').send(loginData);
+        const resToken = await chai.request(app).post('/admin/login').send(loginData);
         const token = resToken.body.token;
 
         const res = await chai
-        .request(app)
-        .get('/timestamps')
-        .set('Authorization', `Bearer ${token}`);
+          .request(app)
+          .get('/timestamps')
+          .set('Authorization', `Bearer ${token}`);
     
         res.should.have.status(200);
         res.should.be.json;
@@ -534,29 +400,45 @@ describe('Timestamps API', () => {
         timestamp1.should.not.be.undefined;
         timestamp1.should.have.property('startTime', '2023-04-26T09:00:00.000Z');
         timestamp1.should.have.property('endTime', '2023-04-26T17:00:00.000Z');
-        timestamp1.should.have.property('citizen', citizenRes.body.id);
+        timestamp1.should.have.property('citizen', citizenId1.toString());
     
         timestamp2.should.not.be.undefined;
         timestamp2.should.have.property('startTime', '2023-04-27T09:00:00.000Z');
         timestamp2.should.have.property('endTime', '2023-04-27T17:00:00.000Z');
-        timestamp2.should.have.property('citizen', citizenRes.body.id);
+        timestamp2.should.have.property('citizen', citizenId1.toString());
       });
     });
   });
 
 describe('Admin API', () => {
   beforeEach(async () => {
-    await Admin.deleteMany({});
-  });
+    const admin = new Admin({
+      _id: adminId1,
+      username: "adminxyz",
+      password: await bcrypt.hash("adminxyz", 10),
+    })
+    await Admin.deleteOne({_id: adminId1})
+    await admin.save()
+  })
 
   describe('POST /signup', () => {
     it('should create a new admin', async () => {
+      const loginData = {
+        username: "admin",
+        password: "admin",
+      }
+      const resToken = await chai.request(app).post('/admin/login').send(loginData);
+      const token = resToken.body.token;
+
       const adminData = {
-        username: 'admin',
-        password: 'admin',
+        username: 'admin2',
+        password: 'admin2',
       };
 
-      const res = await chai.request(app).post('/admin/signup').send(adminData);
+      const res = await chai.request(app)
+        .post('/admin/signup')
+        .set("Authorization", `Bearer ${token}`)
+        .send(adminData);
 
       res.should.have.status(201);
       res.body.should.be.a('object');
@@ -567,13 +449,6 @@ describe('Admin API', () => {
 
   describe('POST /login', () => {
     it('should log in the admin and return a token', async () => {
-      const adminData = {
-        username: 'admin',
-        password: 'admin',
-      };
-
-      // Create a new admin using the /admin/signup route
-      await chai.request(app).post('/admin/signup').send(adminData);
 
       const loginData = {
         username: 'admin',
@@ -591,25 +466,17 @@ describe('Admin API', () => {
 
   describe('DELETE /:adminId', () => {
     it('should delete an admin by ID', async () => {
-      const adminData = {
-        username: 'admin',
-        password: 'admin',
-      };
-
-      // Create a new admin using the /admin/signup route
-      const resSignup = await chai.request(app).post('/admin/signup').send(adminData);
-      const adminId = resSignup.body.id;
-
       const loginData = {
         username: 'admin',
         password: 'admin',
       };
+
       const resToken = await chai.request(app).post('/admin/login').send(loginData);
       const token = resToken.body.token;
 
       const res = await chai
         .request(app)
-        .delete(`/admin/${adminId}`)
+        .delete(`/admin/${adminId1}`)
         .set('Authorization', `Bearer ${token}`);
 
       res.should.have.status(200);

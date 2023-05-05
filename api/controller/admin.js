@@ -49,7 +49,8 @@ exports.login = (req, res, next) => {
                 if(result) { // <--- Correct password. 
                     const token = jwt.sign({
                         username: admin.username,
-                        adminId: admin._id
+                        adminId: admin._id,
+                        role: "admin"
                     }, 
                     process.env.JWT_KEY,
                     {
@@ -58,7 +59,7 @@ exports.login = (req, res, next) => {
                     return res.status(200).json({message: "Authorization successful", token: token})
                 }
 
-                res.status(200).json({message: "Authorization failed"}) // <-- if we get here, password was incorrect. 
+                res.status(401).json({message: "Authorization failed"}) // <-- if we get here, password was incorrect. 
 
             })
             

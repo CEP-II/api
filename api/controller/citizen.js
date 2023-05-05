@@ -103,7 +103,8 @@ exports.login = (req, res, next) => {
                 if(result) { // <--- Correct password. 
                     const token = jwt.sign({
                         email: citizen.email,
-                        citizenId: citizen._id
+                        citizenId: citizen._id,
+                        role: "citizen"
                     }, 
                     process.env.JWT_KEY,
                     {

@@ -6,11 +6,11 @@ const TimestampController = require("../controller/timestamps")
 const authorizeRoles = require('../middleware/authorizeRoles')
 
 
-router.get('/', authorizeRoles(['user', 'admin']), TimestampController.get_all_timestamps)
+router.get('/', authorizeRoles(['citizen', 'admin']), TimestampController.get_all_timestamps)
 
 router.post('/', TimestampController.create_timestamp)
 
-router.get('/:timestampId', authorizeRoles(['user', 'admin']), TimestampController.get_timestamp)
+router.get('/:timestampId', authorizeRoles(['citizen', 'admin']), TimestampController.get_timestamp)
 
 router.delete('/:timestampId', authorizeRoles(['admin']), TimestampController.delete_timestamp)
 

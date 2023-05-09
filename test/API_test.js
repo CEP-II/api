@@ -306,9 +306,7 @@ describe('Timestamps API', () => {
           endTime: '2023-04-26T17:00:00.000Z',
           deviceId: "1234",
         };
-  
         const res = await chai.request(app).post('/timestamps').send(timestampData);
-  
         res.should.have.status(201);
         res.body.should.be.a('object');
         res.body.should.have.property('message').eql('Timestamp stored');
@@ -320,6 +318,7 @@ describe('Timestamps API', () => {
       });
     });
   
+    
     describe('GET /:timestampId', () => {
       it('should get a timestamp by ID', async () => {
 

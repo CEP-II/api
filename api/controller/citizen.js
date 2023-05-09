@@ -53,11 +53,13 @@ const jwt = require('jsonwebtoken') // <-- library for json webtokens.
  *                       type: string
  */
 exports.signup = (req, res, next) => {
-    Citizen.find({email: req.body.email})
+    Citizen.find({
+        $or: [{ email: req.body.email }, { phone: req.body.phone }, {deviceId: req.body.deviceId}],
+        })
         .exec()
         .then(citizen => {
             if(citizen.length >= 1) return res.status(409).json({
-                message: "mail exists already"
+                message: "Unique data already in use."
             })
             
             // New email, hash password and attempt to 

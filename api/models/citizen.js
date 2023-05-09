@@ -17,6 +17,7 @@ const citizenSchema = mongoose.Schema({
     deviceId: {
         type: String,
         required: true,
+        unique: true,
     },
 
     address: {

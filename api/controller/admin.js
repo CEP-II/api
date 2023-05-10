@@ -4,6 +4,68 @@ const Admin = require('../models/admin')
 const bcrypt = require('bcrypt') // <-- for hashing passwords
 const jwt = require('jsonwebtoken') // <-- library for json webtokens. 
 
+
+/**
+ * @swagger
+ * /admin/signup:
+ *   post:
+ *     summary: Sign up a new admin
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       description: Provide the admin details for sign up
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Admin username
+ *               password:
+ *                 type: string
+ *                 description: Admin password
+ *             required:
+ *               - username
+ *               - password
+ *     responses:
+ *       201:
+ *         description: Admin created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *                   description: Unique identifier for the created admin
+ *       409:
+ *         description: Username already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
+ */
 exports.signup = (req, res, next) => {
     Admin.find({username: req.body.username})
         .exec()
@@ -37,6 +99,65 @@ exports.signup = (req, res, next) => {
         })
 }
 
+
+/**
+ * @swagger
+ * /admin/login:
+ *   post:
+ *     summary: Log in as an admin
+ *     tags: [Admin]
+ *     requestBody:
+ *       description: Provide the admin username and password for login
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Admin username
+ *               password:
+ *                 type: string
+ *                 description: Admin password
+ *             required:
+ *               - username
+ *               - password
+ *     responses:
+ *       200:
+ *         description: Authorization successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                 token:
+ *                   type: string
+ *                   description: JWT token
+ *       401:
+ *         description: Authorization failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
+ */
 exports.login = (req, res, next) => {
     Admin.findOne({username: req.body.username})
         .exec()
@@ -69,6 +190,45 @@ exports.login = (req, res, next) => {
         })
 }
 
+
+/**
+ * @swagger
+ * /admin/{adminId}:
+ *   delete:
+ *     summary: Delete an admin account
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: adminId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         required: true
+ *         description: ID of the admin to be deleted
+ *     responses:
+ *       200:
+ *         description: Admin account deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
+ */
 exports.delete = (req, res, next) => {
     Admin.deleteOne({_id: req.params.adminId})
         .exec()

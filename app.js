@@ -11,16 +11,12 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: 'https://miror.serveo.net/api-docs/', // temporary for testing use command: ssh -R 80:localhost:3000 serveo.net to generate
-                description: 'development server',
-            },
-            {
-                url: 'http://localhost:3000',
-                description: 'local server',
+                url: 'http://analogskilte.dk:3000', // temporary for testing use command: ssh -R 80:localhost:3000 serveo.net to generate
+                description: 'Deployment server',
             },
         ],
         components: {
-            securitySchemas: {
+            securitySchemes: {
                 BearerAuth: {
                     type: 'http',
                     scheme: 'bearer',
@@ -44,6 +40,10 @@ const swaggerOptions = {
                         name: {
                             type: 'string',
                             description: 'Name of the citizen',
+                        },
+                        deviceId: {
+                            type: 'string',
+                            description: 'Unique device identifier for the citizen',
                         },
                         address: {
                             type: 'object',
@@ -79,7 +79,7 @@ const swaggerOptions = {
                             description: 'Password of the citizen',
                         },
                     },
-                    required: ['birthdate', 'name', 'address', 'email', 'password'],
+                    required: ['_id','birthdate', 'name', 'deviceId', 'address', 'email', 'password'],
                 },
                 Timestamp: {
                     type: 'object',
@@ -89,7 +89,7 @@ const swaggerOptions = {
                             format: 'uuid',
                             description: 'Unique identifier for the timestamp',
                         },
-                        positionID: {
+                        positionId: {
                             type: 'integer',
                             description: 'Position identifier',
                             minimum: 0,
@@ -105,13 +105,17 @@ const swaggerOptions = {
                             format: 'date-time',
                             description: 'End time of the timestamp',
                         },
+                        deviceId: {
+                            type: 'string',
+                            description: 'Device identifier for the timestamp',
+                        },
                         citizen: {
                             type: 'string',
                             format: 'uuid',
                             description: 'Citizen ID associated with the timestamp',
                         },
                     },
-                    required: ['positionID', 'startTime', 'endTime', 'citizen'],
+                    required: ['_id','positionId', 'startTime', 'endTime', 'deviceId', 'citizen'],
                 },
                 Admin: {
                     type: 'object',
@@ -130,7 +134,7 @@ const swaggerOptions = {
                             description: 'Password of the admin',
                         },
                     },
-                    required: ['username', 'password'],
+                    required: ['_id', 'username', 'password'],
                 },
             },
         },

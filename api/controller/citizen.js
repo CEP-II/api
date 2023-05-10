@@ -9,17 +9,19 @@ const jwt = require('jsonwebtoken') // <-- library for json webtokens.
  * @swagger
  * /citizen/signup:
  *   post:
- *     summary: Register a new citizen
+ *     summary: Sign up a new citizen
  *     tags: [Citizen]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CitizenSignup'
+ *             $ref: '#/components/schemas/Citizen'
  *     responses:
  *       201:
- *         description: Citizen created
+ *         description: Citizen account created successfully
  *         content:
  *           application/json:
  *             schema:
@@ -27,11 +29,15 @@ const jwt = require('jsonwebtoken') // <-- library for json webtokens.
  *               properties:
  *                 message:
  *                   type: string
+ *                   description: Success message
  *                 id:
  *                   type: string
  *                   format: uuid
+ *                   description: ID of the created citizen
+ *                 citizen:
+ *                   $ref: '#/components/schemas/Citizen'
  *       409:
- *         description: Email exists already
+ *         description: Unique data already in use
  *         content:
  *           application/json:
  *             schema:
@@ -39,6 +45,7 @@ const jwt = require('jsonwebtoken') // <-- library for json webtokens.
  *               properties:
  *                 message:
  *                   type: string
+ *                   description: Error message
  *       500:
  *         description: Internal server error
  *         content:
@@ -48,9 +55,7 @@ const jwt = require('jsonwebtoken') // <-- library for json webtokens.
  *               properties:
  *                 error:
  *                   type: object
- *                   properties:
- *                     message:
- *                       type: string
+ *                   description: Error object
  */
 exports.signup = (req, res, next) => {
     Citizen.find({
@@ -93,6 +98,63 @@ exports.signup = (req, res, next) => {
         })
 }
 
+/**
+ * @swagger
+ * /citizen/login:
+ *   post:
+ *     summary: Log in a citizen
+ *     tags: [Citizen]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email address of the citizen
+ *               password:
+ *                 type: string
+ *                 description: Password of the citizen
+ *             required:
+ *               - email
+ *               - password
+ *     responses:
+ *       200:
+ *         description: Authorization successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                 token:
+ *                   type: string
+ *                   description: JWT token
+ *       401:
+ *         description: Authorization failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
+ */
 exports.login = (req, res, next) => {
     Citizen.findOne({email: req.body.email})
         .exec()
@@ -125,6 +187,44 @@ exports.login = (req, res, next) => {
         })
 }
 
+
+/**
+ * @swagger
+ * /citizen/{citizenId}:
+ *   delete:
+ *     summary: Delete a citizen
+ *     tags: [Citizen]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: citizenId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Unique identifier for the citizen
+ *     responses:
+ *       200:
+ *         description: Citizen deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
+ */
 exports.delete = (req, res, next) => {
     Citizen.deleteOne({_id: req.params.citizenId})
         .exec()
@@ -136,6 +236,60 @@ exports.delete = (req, res, next) => {
         })
 }
 
+/**
+ * @swagger
+ * /citizen:
+ *   get:
+ *     summary: Get all citizens
+ *     tags: [Citizen]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number for pagination (optional)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page for pagination (optional)
+ *     responses:
+ *       200:
+ *         description: A list of citizens
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 currentPage:
+ *                   type: integer
+ *                   description: Current page number
+ *                 totalItems:
+ *                   type: integer
+ *                   description: Total number of citizens
+ *                 totalPages:
+ *                   type: integer
+ *                   description: Total number of pages
+ *                 itemsPerPage:
+ *                   type: integer
+ *                   description: Number of items per page
+ *                 citizens:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Citizen'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
+ */
 exports.get_all_citizens = (req, res, next) => {
     const { page, limit } = req.query;
     let query = {};
@@ -175,6 +329,52 @@ exports.get_all_citizens = (req, res, next) => {
       });
   };
 
+  /**
+ * @swagger
+ * /citizen/{citizenId}:
+ *   get:
+ *     summary: Get citizen by ID
+ *     tags: [Citizen]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: citizenId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the citizen to retrieve
+ *     responses:
+ *       200:
+ *         description: Citizen details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 citizen:
+ *                   $ref: '#/components/schemas/Citizen'
+ *       404:
+ *         description: Citizen not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
+ */
   exports.get_citizen = (req, res, next) => {
     Citizen.findById(req.params.citizenId)
         .exec()

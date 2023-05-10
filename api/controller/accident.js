@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const Accident = require('../models/accident')
 const Citizen = require('../models/citizen')
 
-exports.create_timestamp = (req, res, next) => {
+exports.report_accident = (req, res, next) => {
     // find citizen id from device id.
     Citizen.findOne({deviceId: req.body.deviceId})
         .exec()

@@ -160,6 +160,7 @@ const corsOptions = {
 const adminRoutes = require('./api/routes/admin')
 const citizenRoutes = require('./api/routes/citizen')
 const timestampRoutes = require('./api/routes/timestamps')
+const accidentRoutes = require('./api/routes/accident');
 
 // 
 mongoose.connect('mongodb+srv://nightassist:' + 
@@ -186,7 +187,7 @@ app.use(bodyParser.json())
 app.use('/citizen', citizenRoutes)
 app.use('/timestamps', timestampRoutes)
 app.use('/admin', adminRoutes)
-
+app.use('/accident', accidentRoutes)
 
 
 // If we get down here the request is different from what we want to / can handle. 

@@ -300,7 +300,7 @@ describe('Timestamps API', () => {
   
     describe('POST /', () => {
       it('should create a new timestamp', async () => {
-  
+
         const timestampData = {
           startTime: '2023-04-26T09:00:00.000Z',
           endTime: '2023-04-26T17:00:00.000Z',
@@ -344,6 +344,38 @@ describe('Timestamps API', () => {
         res.body.timestamp.should.have.property('endTime');
         res.body.timestamp.startTime.should.not.be.null.and.not.be.undefined;
         res.body.timestamp.endTime.should.not.be.null.and.not.be.undefined;
+      });
+    });
+    
+    describe('GET /timestamps/by-citizen/:citizenId', () => {
+      it('should get all timestamps for a citizen by citizenId', async () => {
+    
+        const loginData = {
+            username: 'admin',
+            password: 'admin',
+        };
+        const resToken = await chai.request(app).post('/admin/login').send(loginData);
+        const token = resToken.body.token;
+    
+        const res = await chai
+            .request(app)
+            .get(`/timestamps/by-citizen/${citizenId1}`)
+            .set('Authorization', `Bearer ${token}`);
+    
+        res.should.have.status(200);
+        res.body.should.be.a('object');
+        res.body.should.have.property('timestamps');
+        res.body.timestamps.should.be.a('array');
+        res.body.timestamps.length.should.be.at.least(1);
+        res.body.timestamps.length.should.be.eql(2);
+    
+        const firstTimestamp = res.body.timestamps[0];
+        firstTimestamp.should.have.property('citizen');
+        firstTimestamp.should.have.property('_id');
+        firstTimestamp.should.have.property('startTime');
+        firstTimestamp.should.have.property('endTime');
+        firstTimestamp.startTime.should.not.be.null.and.not.be.undefined;
+        firstTimestamp.endTime.should.not.be.null.and.not.be.undefined;
       });
     });
     

@@ -131,11 +131,11 @@ exports.create_timestamp = (req, res, next) => {
 
 exports.get_timestamp = (req, res, next) => {
     Timestamp.findById(req.params.timestampId)
-        .populate('citizen', '-__v') // <-- populate product with all data but the "__v" field. 
+        .populate('citizen', '-__v') //  
         .exec()
         .then(timestamp => {
             if(!timestamp) { // <-- if timestamp is null. 
-                return res.status(404).json({message: "Timestamp not found"})
+                res.status(404).json({message: "Timestamp not found"})
             }
             res.status(200).json({
                 timestamp: timestamp
@@ -164,3 +164,23 @@ exports.delete_timestamp = (req, res, next) => {
     })
 }
 
+
+exports.get_timestamps_by_citizenId = (req, res, next) => {
+    Timestamp.find({citizen: req.params.citizenId})
+        .populate('citizen', '-__v') // <-- populate product with all data but the "__v" field.
+        .exec()
+        .then(timestamps => {
+            if(!timestamps || timestamps.length == 0) {
+                res.status(404).json({message: "No timestamps found for the provided citizen"})
+            }
+            res.status(200).json({
+                message: "Succesfully found timestamps related to citizen!", 
+                timestamps: timestamps,
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}

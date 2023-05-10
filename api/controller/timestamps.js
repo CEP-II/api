@@ -106,7 +106,8 @@ exports.create_timestamp = (req, res, next) => {
                 startTime: req.body.startTime,
                 endTime: req.body.endTime,
                 deviceId: req.body.deviceId,
-                citizen: citizen
+                positionId:  req.body.positionId,
+                citizen: citizen,
             })
             // Should check that the citizen id is valid (in DB)? Or is this waste of ressources
             timestamp.save()
@@ -118,7 +119,8 @@ exports.create_timestamp = (req, res, next) => {
                             startTime: result.startTime,
                             endTime: result.endTime,
                             deviceId: result.deviceId,
-                            citizen: result.citizen
+                            positionId: result.positionId,
+                            citizen: result.citizen,
                         },
                     })
                 })

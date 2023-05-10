@@ -3,11 +3,12 @@ const mongoose = require('mongoose')
 const timestampSchema = mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
 
-    positionID: {
+    positionId: {
         type: Number,
         require: true,
         min: 0,
         max: 4,
+        required: true,
     },
 
     startTime: {

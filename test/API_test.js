@@ -281,6 +281,7 @@ describe('Timestamps API', () => {
         startTime: '2023-04-26T09:00:00.000Z',
         endTime: '2023-04-26T17:00:00.000Z',
         deviceId: citizenData1.deviceId,
+        positionId: 1,
       });
 
       const timestampData2 = new Timestamp({
@@ -288,7 +289,8 @@ describe('Timestamps API', () => {
         startTime: '2023-04-27T09:00:00.000Z',
         endTime: '2023-04-27T17:00:00.000Z',
         deviceId: citizenData1.deviceId,
-        citizen: citizenId1
+        citizen: citizenId1,
+        positionId: 1
       });
 
       await Timestamp.deleteMany({});
@@ -305,12 +307,14 @@ describe('Timestamps API', () => {
           startTime: '2023-04-26T09:00:00.000Z',
           endTime: '2023-04-26T17:00:00.000Z',
           deviceId: "1234",
+          positionId: 1,
         };
         const res = await chai.request(app).post('/timestamps').send(timestampData);
         res.should.have.status(201);
         res.body.should.be.a('object');
         res.body.should.have.property('message').eql('Timestamp stored');
         res.body.should.have.property('createdTimestamp');
+        res.body.createdTimestamp.should.have.property('positionId').eql(timestampData.positionId);
         res.body.createdTimestamp.should.have.property('_id');
         res.body.createdTimestamp.should.have.property('startTime').eql(timestampData.startTime);
         res.body.createdTimestamp.should.have.property('endTime').eql(timestampData.endTime);

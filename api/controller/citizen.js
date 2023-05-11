@@ -20,7 +20,7 @@ const jwt = require('jsonwebtoken') // <-- library for json webtokens.
  *           schema:
  *             $ref: '#/components/schemas/Citizen'
  *     responses:
- *       201:
+ *      201:
  *         description: Citizen account created successfully
  *         content:
  *           application/json:
@@ -36,8 +36,8 @@ const jwt = require('jsonwebtoken') // <-- library for json webtokens.
  *                   description: ID of the created citizen
  *                 citizen:
  *                   $ref: '#/components/schemas/Citizen'
- *       409:
- *         description: Unique data already in use
+ *      401:
+ *         description: Unauthorized
  *         content:
  *           application/json:
  *             schema:
@@ -46,7 +46,27 @@ const jwt = require('jsonwebtoken') // <-- library for json webtokens.
  *                 message:
  *                   type: string
  *                   description: Error message
- *       500:
+ *      403:
+ *         description: Forbidden. Insufficient access rights. 
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message 
+ *      409:
+ *         description: Conflict. Unique data already in use
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *      500:
  *         description: Internal server error
  *         content:
  *           application/json:
@@ -84,7 +104,7 @@ exports.signup = (req, res, next) => {
 
                 citizen.save()
                     .then(result => {
-                        res.status(201).json({
+                        return res.status(201).json({
                             message: 'citizen created',
                             id: citizen._id,
                             citizen: citizen
@@ -92,7 +112,7 @@ exports.signup = (req, res, next) => {
                     })
                     .catch(err => {
                         console.log(err)
-                        res.status(500).json({error: err})
+                        return res.status(500).json({error: err})
                     })
             }) // salt: random strings added to the password -> less likely to find it in dictionary tables
         })
@@ -134,8 +154,8 @@ exports.signup = (req, res, next) => {
  *                 token:
  *                   type: string
  *                   description: JWT token
- *       401:
- *         description: Authorization failed
+ *       403:
+ *         description: Authorization failed. Incorrect credentials. 
  *         content:
  *           application/json:
  *             schema:
@@ -143,7 +163,7 @@ exports.signup = (req, res, next) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   description: Error message
+ *                   description: Incorrect credentials 
  *       500:
  *         description: Internal server error
  *         content:
@@ -177,7 +197,7 @@ exports.login = (req, res, next) => {
                     return res.status(200).json({message: "Authorization successful", token: token})
                 }
 
-                res.status(200).json({message: "Authorization failed"}) // <-- if we get here, password was incorrect. 
+                return res.status(403).json({message: "Authorization failed"}) // <-- if we get here, password was incorrect. 
 
             })
             
@@ -214,6 +234,26 @@ exports.login = (req, res, next) => {
  *                 message:
  *                   type: string
  *                   description: Success message
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       403:
+ *         description: Forbidden. Insufficient access rights. 
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message 
  *       500:
  *         description: Internal server error
  *         content:
@@ -229,10 +269,10 @@ exports.delete = (req, res, next) => {
     Citizen.deleteOne({_id: req.params.citizenId})
         .exec()
         .then(result => {
-            res.status(200).json({message: "Citizen deleted"})
+            return res.status(200).json({message: "Citizen deleted"})
         })
         .catch(err => {
-            res.status(500).json({error: err})
+            return res.status(500).json({error: err})
         })
 }
 
@@ -279,6 +319,26 @@ exports.delete = (req, res, next) => {
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Citizen'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       403:
+ *         description: Forbidden. Insufficient access rights. 
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message 
  *       500:
  *         description: Internal server error
  *         content:
@@ -311,7 +371,7 @@ exports.get_all_citizens = (req, res, next) => {
                 itemsPerPage: parseInt(limit),
                 citizens: citizens
               };
-              res.status(200).send(response);
+              return res.status(200).send(response);
             });
         } else {
           const response = {
@@ -321,11 +381,11 @@ exports.get_all_citizens = (req, res, next) => {
             itemsPerPage: citizens.length,
             citizens: citizens
           };
-          res.status(200).send(response);
+          return res.status(200).send(response);
         }
       })
       .catch(error => {
-        res.status(500).send(error);
+        return res.status(500).send(error);
       });
   };
 
@@ -354,6 +414,26 @@ exports.get_all_citizens = (req, res, next) => {
  *               properties:
  *                 citizen:
  *                   $ref: '#/components/schemas/Citizen'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       403:
+ *         description: Forbidden. Insufficient access rights. 
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message 
  *       404:
  *         description: Citizen not found
  *         content:
@@ -382,12 +462,12 @@ exports.get_all_citizens = (req, res, next) => {
             if(!citizen) { // <-- if citizen is null. 
                 return res.status(404).json({message: "Citizen not found"})
             }
-            res.status(200).json({
+            return res.status(200).json({
                 citizen: citizen
             })
         })
         .catch(err => {
-            res.status(500).json({
+            return res.status(500).json({
                 error: err
             })
         })

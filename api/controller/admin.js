@@ -46,7 +46,7 @@ const jwt = require('jsonwebtoken') // <-- library for json webtokens.
  *                   format: uuid
  *                   description: Unique identifier for the created admin
  *       409:
- *         description: Username already exists
+ *         description: Conflict. Request could not be processed. Unique data already in user. 
  *         content:
  *           application/json:
  *             schema:
@@ -71,7 +71,7 @@ exports.signup = (req, res, next) => {
         .exec()
         .then(admin => {
             if(admin.length >= 1) return res.status(409).json({
-                message: "username exists already"
+                message: "admin username exists already"
             })
             
             // New username, hash password and attempt to 
@@ -86,14 +86,14 @@ exports.signup = (req, res, next) => {
 
                 admin.save()
                     .then(result => {
-                        res.status(201).json({
+                        return res.status(201).json({
                             message: 'admin created',
                             id: admin._id
                         })
                     })
                     .catch(err => {
                         console.log(err)
-                        res.status(500).json({error: err})
+                        return res.status(500).json({error: err})
                     })
             }) // salt: random strings added to the password -> less likely to find it in dictionary tables
         })
@@ -125,7 +125,7 @@ exports.signup = (req, res, next) => {
  *               - password
  *     responses:
  *       200:
- *         description: Authorization successful
+ *         description: OK. Authorized successfully. 
  *         content:
  *           application/json:
  *             schema:
@@ -138,7 +138,17 @@ exports.signup = (req, res, next) => {
  *                   type: string
  *                   description: JWT token
  *       401:
- *         description: Authorization failed
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       403:
+ *         description: Forbidden. Insufficient access rights. 
  *         content:
  *           application/json:
  *             schema:
@@ -179,8 +189,7 @@ exports.login = (req, res, next) => {
                     })
                     return res.status(200).json({message: "Authorization successful", token: token})
                 }
-
-                res.status(401).json({message: "Authorization failed"}) // <-- if we get here, password was incorrect. 
+                return res.status(401).json({message: "Authorization failed"}) // <-- if we get here, password was incorrect. 
 
             })
             
@@ -218,6 +227,26 @@ exports.login = (req, res, next) => {
  *                 message:
  *                   type: string
  *                   description: Success message
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       403:
+ *         description: Forbidden. Insufficient access rights. 
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
  *       500:
  *         description: Internal server error
  *         content:
@@ -229,14 +258,16 @@ exports.login = (req, res, next) => {
  *                   type: object
  *                   description: Error object
  */
-exports.delete = (req, res, next) => {
+exports.delete_admin = (req, res, next) => {
     Admin.deleteOne({_id: req.params.adminId})
         .exec()
         .then(result => {
-            res.status(200).json({message: "admin deleted"})
+            return res.status(200).json({message: "Admin deleted"})
         })
         .catch(err => {
-            res.status(500).json({error: err})
+            return res.status(500).json({error: err})
         })
 }
+
+
 

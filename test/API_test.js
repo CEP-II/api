@@ -5,17 +5,28 @@ const mongoose = require('mongoose');
 const Citizen = require('../api/models/citizen');
 const Timestamp = require('../api/models/timestamp')
 const Admin = require('../api/models/admin')
+const Accident = require('../api/models/accident')
 
 const bcrypt = require('bcrypt')
 
 const chai = require('chai');
 const chaiHttp = require('chai-http');
+chai.use(chaiHttp);
+chai.should();
 
 const app = require('../app').listen(0); // 0 = operating system assigns available
 
 const { MongoMemoryServer } = require('mongodb-memory-server');
-
 let mongoServer;
+
+
+const citizenId1 = new mongoose.Types.ObjectId()
+const citizenId2 = new mongoose.Types.ObjectId()
+const timestampId1 = new mongoose.Types.ObjectId()
+const timestampId2 = new mongoose.Types.ObjectId()
+const adminId1 = new mongoose.Types.ObjectId()
+const accidentId1 = new mongoose.Types.ObjectId()
+
 
 before(async () => {
   // Start the MongoMemoryServer
@@ -34,7 +45,16 @@ before(async () => {
     username: "admin",
     password: await bcrypt.hash("admin", 10),
   })
-  await admin.save();  
+  await admin.save(); 
+  
+  const accident = new Accident({
+    _id: accidentId1,
+    alarmTime: Date.now(),
+    deviceId: "pi123",
+    positionId: "1",
+    citizen: citizenId1,
+  })
+  await accident.save()
 });
 
 after(async () => {
@@ -47,14 +67,6 @@ after(async () => {
   await mongoServer.stop();
 });
 
-chai.use(chaiHttp);
-chai.should();
-
-const citizenId1 = new mongoose.Types.ObjectId()
-const citizenId2 = new mongoose.Types.ObjectId()
-const timestampId1 = new mongoose.Types.ObjectId()
-const timestampId2 = new mongoose.Types.ObjectId()
-const adminId1 = new mongoose.Types.ObjectId()
 
 
 describe('Citizens API', () => {
@@ -489,9 +501,7 @@ describe('Admin API', () => {
         username: 'admin',
         password: 'admin',
       };
-
       const res = await chai.request(app).post('/admin/login').send(loginData);
-
       res.should.have.status(200);
       res.body.should.be.a('object');
       res.body.should.have.property('message').eql('Authorization successful');
@@ -516,7 +526,137 @@ describe('Admin API', () => {
 
       res.should.have.status(200);
       res.body.should.be.a('object');
-      res.body.should.have.property('message').eql('admin deleted');
+      res.body.should.have.property('message').eql('Admin deleted');
     });
   });
 });
+
+describe('Accident API', () => {
+  before(async () => {
+    const citizen = new Citizen({
+      _id: new mongoose.Types.ObjectId(),
+      deviceId: "testId",
+      birthdate: Date.now(),
+      address: {
+        street: "test",
+        city: "test",
+        postal: 8000
+      },
+      name: "test",
+      phone: "87568294",
+      email: "test@test.com",
+      password: "test123" // unhashed password but does not matter for our accident test suite. 
+    })
+    await citizen.save()
+  })
+
+  describe('GET /', () => {
+    it('should get all accidents (without pagination)', async () => {
+      const loginData = {
+        username: "admin",
+        password: "admin"
+      }
+
+      const resToken = await chai.request(app).post('/admin/login').send(loginData);
+      const token = resToken.body.token;
+
+      const res = await chai
+        .request(app)
+        .get(`/accident`)
+        .set('Authorization', `Bearer ${token}`);
+      
+      res.should.have.status(200);
+      res.should.be.json;
+      res.body.should.be.a('object'); // Change this from 'array' to 'object'
+      res.body.should.have.property('accidents'); // Check that the 'accidents' property exists
+      res.body.accidents.should.be.a('array'); // Check that the 'accidents' property is an array
+      res.body.accidents.length.should.be.eql(1); // one at top level.
+
+      res.body.accidents.every(item => item.should.be.a('object'));
+
+      const accident1 = res.body.accidents[0]
+  
+      accident1.should.not.be.undefined;
+      accident1.should.have.property('alarmTime');
+      accident1.should.have.property('positionId');
+      accident1.should.have.property('citizen');
+    
+    })
+    it('should get accidents (with pagination)', async () => {
+      const loginData = {
+        username: "admin",
+        password: "admin"
+      }
+      const resToken = await chai.request(app).post('/admin/login').send(loginData);
+      const token = resToken.body.token;
+  
+      const page = 1;
+      const limit = 5;
+  
+      const res = await chai
+        .request(app)
+        .get(`/accident?page=${page}&limit=${limit}`)
+        .set('Authorization', `Bearer ${token}`);
+      
+      res.should.have.status(200);
+      res.should.be.json;
+      res.body.should.be.a('object');
+      res.body.should.have.property('accidents'); 
+      res.body.accidents.should.be.a('array'); 
+  
+      res.body.should.have.property('currentPage').eql(page);
+      res.body.should.have.property('totalPages');
+      res.body.should.have.property('itemsPerPage').eql(limit);
+  
+      res.body.accidents.length.should.be.at.most(limit); // The number of items should be less than or equal to the limit
+  
+      res.body.accidents.every(item => item.should.be.a('object'));
+  
+      const accident1 = res.body.accidents[0]
+  
+      accident1.should.not.be.undefined;
+      accident1.should.have.property('alarmTime');
+      accident1.should.have.property('positionId');
+      accident1.should.have.property('citizen');
+    })
+
+  })
+
+
+  // Not testing SMS functionality in this. 
+  describe('POST /', () => { 
+    it('should report an accident', async () => {
+      const accident = new Accident({
+        deviceId: "testId",
+        positionId: 0,
+        alarmTime: Date.now(),
+      })
+
+      const res = await chai.request(app).post('/accident').send(accident)
+      res.should.have.status(201)
+      res.body.should.be.a('object')
+      res.body.should.have.property('message').eql('Accident stored')
+    })
+  })
+
+  describe('DELETE /:accidentId', () => {
+    it('should delete an accident by its Id', async () => {
+      const loginData = {
+        username: "admin",
+        password: "admin"
+      }
+      const resToken = await chai.request(app).post('/admin/login').send(loginData);
+      const token = resToken.body.token;
+
+      const res = await chai
+        .request(app)
+        .delete(`/accident/${accidentId1}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      res.should.have.status(200);
+      res.body.should.be.a('object');
+      res.body.should.have.property('message').eql('Accident deleted');
+    
+    })
+  })
+})

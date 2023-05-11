@@ -51,8 +51,36 @@ const Citizen = require('../models/citizen');
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Timestamp'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       403:
+ *         description: Forbidden. Insufficient access rights. 
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message 
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
  */
 exports.get_all_timestamps = (req, res, next) => {
     const { page, limit } = req.query;
@@ -163,10 +191,26 @@ exports.get_all_timestamps = (req, res, next) => {
  *                     citizen:
  *                       type: string
  *                       example: '60e2b2a84d53a45e38b58b6c'
- *       500:
- *         description: Internal server error
  *       404:
  *         description: Device ID not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
  */
 exports.create_timestamp = (req, res, next) => {
     // find citizen id from device id.
@@ -234,10 +278,46 @@ exports.create_timestamp = (req, res, next) => {
  *               properties:
  *                 timestamp:
  *                   $ref: '#/components/schemas/Timestamp'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       403:
+ *         description: Forbidden. Insufficient access rights. 
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message 
  *       404:
- *         description: Timestamp not found
+ *         description: Timestamp ID not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
  */
 exports.get_timestamp = (req, res, next) => {
     Timestamp.findById(req.params.timestampId)
@@ -289,8 +369,36 @@ exports.get_timestamp = (req, res, next) => {
  *                 message:
  *                   type: string
  *                   example: 'timestamp deleted'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       403:
+ *         description: Forbidden. Insufficient access rights. 
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message 
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
  */
 exports.delete_timestamp = (req, res, next) => {
     Timestamp.deleteOne({_id: req.params.timestampId})
@@ -340,10 +448,46 @@ exports.delete_timestamp = (req, res, next) => {
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Timestamp'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       403:
+ *         description: Forbidden. Insufficient access rights. 
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message 
  *       404:
- *         description: No timestamps found for the provided citizen
+ *         description: No timestamps found for the provided citizen ID. 
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
  */
 exports.get_timestamps_by_citizenId = (req, res, next) => {
     Timestamp.find({citizen: req.params.citizenId})

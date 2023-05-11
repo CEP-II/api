@@ -117,6 +117,37 @@ const swaggerOptions = {
                     },
                     required: ['_id','positionId', 'startTime', 'endTime', 'deviceId', 'citizen'],
                 },
+                Accident: {
+                    type: 'object',
+                    properties: {
+                        _id: {
+                            type: 'string',
+                            format: 'uuid',
+                            description: 'Unique identifier for the accident',
+                        },
+                        alarmTime: {
+                            type: 'string',
+                            format: 'date-time',
+                            description: 'Time when the accident alarm was triggered',
+                        },
+                        positionId: {
+                            type: 'integer',
+                            description: 'Position identifier at the time of the accident',
+                            minimum: 0,
+                            maximum: 4,
+                        },
+                        deviceId: {
+                            type: 'string',
+                            description: 'Unique device identifier of the citizen reporting the accident',
+                        },
+                        citizen: {
+                            type: 'string',
+                            format: 'uuid',
+                            description: 'Unique identifier for the citizen involved in the accident',
+                        },
+                    },
+                    required: ['_id', 'alarmTime', 'positionId', 'deviceId', 'citizen'],
+                },
                 Admin: {
                     type: 'object',
                     properties: {

@@ -27,11 +27,13 @@ const adminId1 = new mongoose.Types.ObjectId();
 const accidentId1 = new mongoose.Types.ObjectId();
 
 before(async () => {
-  // Start the MongoMemoryServer
+  // If Mongoose is already connected, close the current connection first
+  if (mongoose.connection.readyState) {
+    await mongoose.disconnect();
+  }
+
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
-
-  // Connect to the in-memory MongoDB instance
   await mongoose.connect(mongoUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -56,12 +58,11 @@ before(async () => {
 });
 
 after(async () => {
-  // Close app and disconnect from the in-memory MongoDB instance
   app.close(() => {
     console.log("Server stopped after testing");
   });
 
-  await mongoose.connection.close();
+  await mongoose.disconnect();
   await mongoServer.stop();
 });
 

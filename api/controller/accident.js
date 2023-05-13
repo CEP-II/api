@@ -118,16 +118,17 @@ exports.report_accident = (req, res, next) => {
         alarmTime: req.body.alarmTime,
       });
 
-      // const client = new twilio(accountSid, authToken)
+      const client = new twilio(accountSid, authToken);
 
       // Send SMS using Twilio, this should send an sms
-      // client.messages.create({
-      //     body: `Accident reported by citizen ${citizen._id}. Device ID: ${accident.deviceId}, Position ID: ${accident.positionId}, Alarm Time: ${accident.alarmTime}`,
-      //     to: numberTo,
-      //     from: numberFrom, // Your Twilio phone number
-      // })
-      // .then(message => console.log(message.sid));
-      sendAccidentSMS(accident, accountSid, authToken, numberFrom, numberTo);
+      client.messages
+        .create({
+          body: `Accident reported by citizen ${citizen._id}. Device ID: ${accident.deviceId}, Position ID: ${accident.positionId}, Alarm Time: ${accident.alarmTime}`,
+          to: numberTo,
+          from: numberFrom, // Your Twilio phone number
+        })
+        .then((message) => console.log(message.sid));
+      // sendAccidentSMS(accident, accountSid, authToken, numberFrom, numberTo);
 
       accident
         .save()

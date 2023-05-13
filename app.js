@@ -8,7 +8,7 @@ const swaggerOptions = {
       title: "Night Assist API",
       version: "1.0.0",
       description:
-        "Documentation for Night Assist's API used for data transfer between database and web server. The API follows the production-standard REST principles. Each endpoint has been unit tested.",
+        "Documentation for Night Assist's API used for data transfer between database and web server. The API follows the production-standard REST principles. Each endpoint has been unit tested: both success scenarios and all but the generic 500 response in case of errors have been tested. The custom middleware for authentication has also been unit tested.",
     },
     servers: [
       {

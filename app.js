@@ -12,7 +12,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: "http://analogskilte.dk:3000", // temporary for testing use command: ssh -R 80:localhost:3000 serveo.net to generate
+        url: "http://analogskilte.dk:3000",
         description: "Deployment server",
       },
     ],

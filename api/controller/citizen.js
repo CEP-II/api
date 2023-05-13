@@ -1,9 +1,8 @@
-const mongoose = require('mongoose')
-const Citizen = require('../models/citizen')
+const mongoose = require("mongoose");
+const Citizen = require("../models/citizen");
 
-const bcrypt = require('bcrypt') // <-- for hashing passwords
-const jwt = require('jsonwebtoken') // <-- library for json webtokens. 
-
+const bcrypt = require("bcrypt"); // <-- for hashing passwords
+const jwt = require("jsonwebtoken"); // <-- library for json webtokens.
 
 /**
  * @swagger
@@ -47,7 +46,7 @@ const jwt = require('jsonwebtoken') // <-- library for json webtokens.
  *                   type: string
  *                   description: Error message
  *      403:
- *         description: Forbidden. Insufficient access rights. 
+ *         description: Forbidden. Insufficient access rights.
  *         content:
  *           application/json:
  *             schema:
@@ -55,7 +54,7 @@ const jwt = require('jsonwebtoken') // <-- library for json webtokens.
  *               properties:
  *                 message:
  *                   type: string
- *                   description: Error message 
+ *                   description: Error message
  *      409:
  *         description: Conflict. Unique data already in use
  *         content:
@@ -78,45 +77,51 @@ const jwt = require('jsonwebtoken') // <-- library for json webtokens.
  *                   description: Error object
  */
 exports.signup = (req, res, next) => {
-    Citizen.find({
-        $or: [{ email: req.body.email }, { phone: req.body.phone }, {deviceId: req.body.deviceId}],
-        })
-        .exec()
-        .then(citizen => {
-            if(citizen.length >= 1) return res.status(409).json({
-                message: "Unique data already in use."
-            })
-            
-            // New email, hash password and attempt to 
-            bcrypt.hash(req.body.password,  10, (err, hash) => {
-                if(err) return res.status(500).json({error: err}) 
-                
-                const citizen = new Citizen({
-                    _id: new mongoose.Types.ObjectId(),
-                    deviceId: req.body.deviceId,
-                    birthdate: req.body.birthdate,
-                    name: req.body.name,
-                    email: req.body.email,
-                    phone: req.body.phone,
-                    address: req.body.address,
-                    password: hash
-                })
+  Citizen.find({
+    $or: [
+      { email: req.body.email },
+      { phone: req.body.phone },
+      { deviceId: req.body.deviceId },
+    ],
+  })
+    .exec()
+    .then((citizen) => {
+      if (citizen.length >= 1)
+        return res.status(409).json({
+          message: "Unique data already in use.",
+        });
 
-                citizen.save()
-                    .then(result => {
-                        return res.status(201).json({
-                            message: 'citizen created',
-                            id: citizen._id,
-                            citizen: citizen
-                        })
-                    })
-                    .catch(err => {
-                        console.log(err)
-                        return res.status(500).json({error: err})
-                    })
-            }) // salt: random strings added to the password -> less likely to find it in dictionary tables
-        })
-}
+      // New email, hash password and attempt to
+      bcrypt.hash(req.body.password, 10, (err, hash) => {
+        if (err) return res.status(500).json({ error: err });
+
+        const citizen = new Citizen({
+          _id: new mongoose.Types.ObjectId(),
+          deviceId: req.body.deviceId,
+          birthdate: req.body.birthdate,
+          name: req.body.name,
+          email: req.body.email,
+          phone: req.body.phone,
+          address: req.body.address,
+          password: hash,
+        });
+
+        citizen
+          .save()
+          .then((result) => {
+            return res.status(201).json({
+              message: "citizen created",
+              id: citizen._id,
+              citizen: citizen,
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+            return res.status(500).json({ error: err });
+          });
+      }); // salt: random strings added to the password -> less likely to find it in dictionary tables
+    });
+};
 
 /**
  * @swagger
@@ -154,8 +159,8 @@ exports.signup = (req, res, next) => {
  *                 token:
  *                   type: string
  *                   description: JWT token
- *       403:
- *         description: Authorization failed. Incorrect credentials. 
+ *       401:
+ *         description: Authorization failed. Incorrect email or password.
  *         content:
  *           application/json:
  *             schema:
@@ -163,7 +168,7 @@ exports.signup = (req, res, next) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   description: Incorrect credentials 
+ *                   description: Error message
  *       500:
  *         description: Internal server error
  *         content:
@@ -176,37 +181,42 @@ exports.signup = (req, res, next) => {
  *                   description: Error object
  */
 exports.login = (req, res, next) => {
-    Citizen.findOne({email: req.body.email})
-        .exec()
-        .then(citizen => {         // <--- we only want 1 citizen per email, so should only see 1, hence citizen.
-            if(!citizen) return res.status(401).json({message: "Authorization failed"})
-            // make sure password matches the one in database (for associated email)
-            bcrypt.compare(req.body.password, citizen.password, (err, result) => {
-                if(err) return res.status(401).json({message: "Authorization failed"}) // comparison failed, not necessarily because of wrong password
+  Citizen.findOne({ email: req.body.email })
+    .exec()
+    .then((citizen) => {
+      // <--- we only want 1 citizen per email, so should only see 1, hence citizen.
+      if (!citizen)
+        return res.status(401).json({ message: "Authorization failed" });
+      // make sure password matches the one in database (for associated email)
+      bcrypt.compare(req.body.password, citizen.password, (err, result) => {
+        if (err)
+          return res.status(401).json({ message: "Authorization failed" }); // comparison failed, not necessarily because of wrong password
 
-                if(result) { // <--- Correct password. 
-                    const token = jwt.sign({
-                        email: citizen.email,
-                        citizenId: citizen._id,
-                        role: "citizen"
-                    }, 
-                    process.env.JWT_KEY,
-                    {
-                        expiresIn: "1hr",
-                    })
-                    return res.status(200).json({message: "Authorization successful", token: token})
-                }
+        if (result) {
+          // <--- Correct password.
+          const token = jwt.sign(
+            {
+              email: citizen.email,
+              citizenId: citizen._id,
+              role: "citizen",
+            },
+            process.env.JWT_KEY,
+            {
+              expiresIn: "1hr",
+            }
+          );
+          return res
+            .status(200)
+            .json({ message: "Authorization successful", token: token });
+        }
 
-                return res.status(403).json({message: "Authorization failed"}) // <-- if we get here, password was incorrect. 
-
-            })
-            
-        })
-        .catch(err => {
-            return res.status(500).json({error:err})
-        })
-}
-
+        return res.status(401).json({ message: "Authorization failed" }); // <-- if we get here, password was incorrect.
+      });
+    })
+    .catch((err) => {
+      return res.status(500).json({ error: err });
+    });
+};
 
 /**
  * @swagger
@@ -245,7 +255,7 @@ exports.login = (req, res, next) => {
  *                   type: string
  *                   description: Error message
  *       403:
- *         description: Forbidden. Insufficient access rights. 
+ *         description: Forbidden. Insufficient access rights.
  *         content:
  *           application/json:
  *             schema:
@@ -253,7 +263,7 @@ exports.login = (req, res, next) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   description: Error message 
+ *                   description: Error message
  *       500:
  *         description: Internal server error
  *         content:
@@ -266,15 +276,15 @@ exports.login = (req, res, next) => {
  *                   description: Error object
  */
 exports.delete = (req, res, next) => {
-    Citizen.deleteOne({_id: req.params.citizenId})
-        .exec()
-        .then(result => {
-            return res.status(200).json({message: "Citizen deleted"})
-        })
-        .catch(err => {
-            return res.status(500).json({error: err})
-        })
-}
+  Citizen.deleteOne({ _id: req.params.citizenId })
+    .exec()
+    .then((result) => {
+      return res.status(200).json({ message: "Citizen deleted" });
+    })
+    .catch((err) => {
+      return res.status(500).json({ error: err });
+    });
+};
 
 /**
  * @swagger
@@ -330,7 +340,7 @@ exports.delete = (req, res, next) => {
  *                   type: string
  *                   description: Error message
  *       403:
- *         description: Forbidden. Insufficient access rights. 
+ *         description: Forbidden. Insufficient access rights.
  *         content:
  *           application/json:
  *             schema:
@@ -338,7 +348,7 @@ exports.delete = (req, res, next) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   description: Error message 
+ *                   description: Error message
  *       500:
  *         description: Internal server error
  *         content:
@@ -351,45 +361,44 @@ exports.delete = (req, res, next) => {
  *                   description: Error object
  */
 exports.get_all_citizens = (req, res, next) => {
-    const { page, limit } = req.query;
-    let query = {};
-  
-    if (page && limit) {
-      const skip = (parseInt(page) - 1) * parseInt(limit);
-      query = { limit: parseInt(limit), skip };
-    }
-  
-    Citizen.find({}, null, query)
-      .then(citizens => {
-        if (page && limit) {
-          return Citizen.countDocuments()
-            .then(totalItems => {
-              const response = {
-                currentPage: parseInt(page),
-                totalItems,
-                totalPages: Math.ceil(totalItems / parseInt(limit)),
-                itemsPerPage: parseInt(limit),
-                citizens: citizens
-              };
-              return res.status(200).send(response);
-            });
-        } else {
+  const { page, limit } = req.query;
+  let query = {};
+
+  if (page && limit) {
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    query = { limit: parseInt(limit), skip };
+  }
+
+  Citizen.find({}, null, query)
+    .then((citizens) => {
+      if (page && limit) {
+        return Citizen.countDocuments().then((totalItems) => {
           const response = {
-            currentPage: 1,
-            totalItems: citizens.length,
-            totalPages: 1,
-            itemsPerPage: citizens.length,
-            citizens: citizens
+            currentPage: parseInt(page),
+            totalItems,
+            totalPages: Math.ceil(totalItems / parseInt(limit)),
+            itemsPerPage: parseInt(limit),
+            citizens: citizens,
           };
           return res.status(200).send(response);
-        }
-      })
-      .catch(error => {
-        return res.status(500).send(error);
-      });
-  };
+        });
+      } else {
+        const response = {
+          currentPage: 1,
+          totalItems: citizens.length,
+          totalPages: 1,
+          itemsPerPage: citizens.length,
+          citizens: citizens,
+        };
+        return res.status(200).send(response);
+      }
+    })
+    .catch((error) => {
+      return res.status(500).send(error);
+    });
+};
 
-  /**
+/**
  * @swagger
  * /citizen/{citizenId}:
  *   get:
@@ -425,7 +434,7 @@ exports.get_all_citizens = (req, res, next) => {
  *                   type: string
  *                   description: Error message
  *       403:
- *         description: Forbidden. Insufficient access rights. 
+ *         description: Forbidden. Insufficient access rights.
  *         content:
  *           application/json:
  *             schema:
@@ -433,7 +442,7 @@ exports.get_all_citizens = (req, res, next) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   description: Error message 
+ *                   description: Error message
  *       404:
  *         description: Citizen not found
  *         content:
@@ -455,21 +464,127 @@ exports.get_all_citizens = (req, res, next) => {
  *                   type: object
  *                   description: Error object
  */
-  exports.get_citizen = (req, res, next) => {
-    Citizen.findById(req.params.citizenId)
-        .exec()
-        .then(citizen => {
-            if(!citizen) { // <-- if citizen is null. 
-                return res.status(404).json({message: "Citizen not found"})
-            }
-            return res.status(200).json({
-                citizen: citizen
-            })
-        })
-        .catch(err => {
-            return res.status(500).json({
-                error: err
-            })
-        })
-}
+exports.get_citizen = (req, res, next) => {
+  Citizen.findById(req.params.citizenId)
+    .exec()
+    .then((citizen) => {
+      if (!citizen) {
+        // <-- if citizen is null.
+        return res.status(404).json({ message: "Citizen not found" });
+      }
+      return res.status(200).json({
+        citizen: citizen,
+      });
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        error: err,
+      });
+    });
+};
 
+/**
+ * @swagger
+ * /citizen/login:
+ *   post:
+ *     summary: Log in a citizen
+ *     tags: [Citizen]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email address of the citizen
+ *               password:
+ *                 type: string
+ *                 description: Password of the citizen
+ *             required:
+ *               - email
+ *               - password
+ *     responses:
+ *       200:
+ *         description: Authorization successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                 token:
+ *                   type: string
+ *                   description: JWT token
+ *       401:
+ *         description: Authorization failed. Incorrect email or password.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       403:
+ *         description: Forbidden. Insufficient access rights.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *                   description: Error object
+ */
+exports.patch_citizen = async (req, res, next) => {
+  const id = req.params.citizenId;
+  const updates = {};
+
+  const citizenSchemaKeys = Object.keys(Citizen.schema.paths);
+
+  // Find the list of changes to make.
+  for (const update of req.body) {
+    if (!citizenSchemaKeys.includes(update.propName)) {
+      return res.status(400).json({
+        message: "Invalid propName",
+      });
+    }
+    if (update.propName === "password") {
+      updates[update.propName] = await bcrypt.hash(update.value, 10);
+    } else {
+      updates[update.propName] = update.value;
+    }
+  }
+
+  Citizen.updateOne({ _id: id }, { $set: updates })
+    .exec()
+    .then((result) => {
+      if (result.modifiedCount == 0) {
+        return res.status(204).json({
+          message: "No content changed",
+        });
+      } else {
+        return res.status(200).json({
+          message: "Citizen updated",
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      return res.status(500).json({ error: err });
+    });
+};

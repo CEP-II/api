@@ -1,9 +1,7 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
-const Timestamp = require('../models/timestamp');
-const Citizen = require('../models/citizen');
-
-
+const Timestamp = require("../models/timestamp");
+const Citizen = require("../models/citizen");
 
 /**
  * @swagger
@@ -62,7 +60,7 @@ const Citizen = require('../models/citizen');
  *                   type: string
  *                   description: Error message
  *       403:
- *         description: Forbidden. Insufficient access rights. 
+ *         description: Forbidden. Insufficient access rights.
  *         content:
  *           application/json:
  *             schema:
@@ -70,7 +68,7 @@ const Citizen = require('../models/citizen');
  *               properties:
  *                 message:
  *                   type: string
- *                   description: Error message 
+ *                   description: Error message
  *       500:
  *         description: Internal server error
  *         content:
@@ -83,44 +81,42 @@ const Citizen = require('../models/citizen');
  *                   description: Error object
  */
 exports.get_all_timestamps = (req, res, next) => {
-    const { page, limit } = req.query;
-    let query = {};
-  
-    if (page && limit) {
-      const skip = (parseInt(page) - 1) * parseInt(limit);
-      query = { limit: parseInt(limit), skip };
-    }
-  
-    Timestamp.find({}, null, query)
-      .then(timestamps => {
-        if (page && limit) {
-          return Timestamp.countDocuments()
-            .then(totalItems => {
-              const response = {
-                currentPage: parseInt(page),
-                totalItems,
-                totalPages: Math.ceil(totalItems / parseInt(limit)),
-                itemsPerPage: parseInt(limit),
-                timestamps: timestamps
-              };
-              res.status(200).send(response);
-            });
-        } else {
+  const { page, limit } = req.query;
+  let query = {};
+
+  if (page && limit) {
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    query = { limit: parseInt(limit), skip };
+  }
+
+  Timestamp.find({}, null, query)
+    .then((timestamps) => {
+      if (page && limit) {
+        return Timestamp.countDocuments().then((totalItems) => {
           const response = {
-            currentPage: 1,
-            totalItems: timestamps.length,
-            totalPages: 1,
-            itemsPerPage: timestamps.length,
-            timestamps: timestamps
+            currentPage: parseInt(page),
+            totalItems,
+            totalPages: Math.ceil(totalItems / parseInt(limit)),
+            itemsPerPage: parseInt(limit),
+            timestamps: timestamps,
           };
-          res.status(200).send(response);
-        }
-      })
-      .catch(error => {
-        res.status(500).send(error);
-      });
-  };
-  
+          return res.status(200).send(response);
+        });
+      } else {
+        const response = {
+          currentPage: 1,
+          totalItems: timestamps.length,
+          totalPages: 1,
+          itemsPerPage: timestamps.length,
+          timestamps: timestamps,
+        };
+        return res.status(200).send(response);
+      }
+    })
+    .catch((error) => {
+      return res.status(500).send(error);
+    });
+};
 
 /**
  * @swagger
@@ -213,43 +209,45 @@ exports.get_all_timestamps = (req, res, next) => {
  *                   description: Error object
  */
 exports.create_timestamp = (req, res, next) => {
-    // find citizen id from device id.
-    Citizen.findOne({deviceId: req.body.deviceId})
-        .exec()
-        .then(citizen => {
-            if(!citizen) return res.status(404).json({
-                message: "device id not found",
-            })
-            
-            const timestamp = new Timestamp({
-                _id: new mongoose.Types.ObjectId(),
-                startTime: req.body.startTime,
-                endTime: req.body.endTime,
-                deviceId: req.body.deviceId,
-                positionId:  req.body.positionId,
-                citizen: citizen,
-            })
-            // Should check that the citizen id is valid (in DB)? Or is this waste of ressources
-            timestamp.save()
-                .then(result => {
-                    res.status(201).json({
-                        message: "Timestamp stored",
-                        createdTimestamp: {
-                            _id: result._id,
-                            startTime: result.startTime,
-                            endTime: result.endTime,
-                            deviceId: result.deviceId,
-                            positionId: result.positionId,
-                            citizen: result.citizen,
-                        },
-                    })
-                })
-                .catch(err => {
-                    console.log(err)
-                    res.status(500).json({error: err})
-                })
+  // find citizen id from device id.
+  Citizen.findOne({ deviceId: req.body.deviceId })
+    .exec()
+    .then((citizen) => {
+      if (!citizen)
+        return res.status(404).json({
+          message: "device id not found",
+        });
+
+      const timestamp = new Timestamp({
+        _id: new mongoose.Types.ObjectId(),
+        startTime: req.body.startTime,
+        endTime: req.body.endTime,
+        deviceId: req.body.deviceId,
+        positionId: req.body.positionId,
+        citizen: citizen,
+      });
+      // Should check that the citizen id is valid (in DB)? Or is this waste of ressources
+      timestamp
+        .save()
+        .then((result) => {
+          return res.status(201).json({
+            message: "Timestamp stored",
+            createdTimestamp: {
+              _id: result._id,
+              startTime: result.startTime,
+              endTime: result.endTime,
+              deviceId: result.deviceId,
+              positionId: result.positionId,
+              citizen: result.citizen,
+            },
+          });
         })
-}
+        .catch((err) => {
+          console.log(err);
+          return res.status(500).json({ error: err });
+        });
+    });
+};
 
 /**
  * @swagger
@@ -289,7 +287,7 @@ exports.create_timestamp = (req, res, next) => {
  *                   type: string
  *                   description: Error message
  *       403:
- *         description: Forbidden. Insufficient access rights. 
+ *         description: Forbidden. Insufficient access rights.
  *         content:
  *           application/json:
  *             schema:
@@ -297,7 +295,7 @@ exports.create_timestamp = (req, res, next) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   description: Error message 
+ *                   description: Error message
  *       404:
  *         description: Timestamp ID not found
  *         content:
@@ -320,25 +318,24 @@ exports.create_timestamp = (req, res, next) => {
  *                   description: Error object
  */
 exports.get_timestamp = (req, res, next) => {
-    Timestamp.findById(req.params.timestampId)
-        .populate('citizen', '-__v') //  
-        .exec()
-        .then(timestamp => {
-            if(!timestamp) { // <-- if timestamp is null. 
-                res.status(404).json({message: "Timestamp not found"})
-            }
-            res.status(200).json({
-                timestamp: timestamp
-            })
-        })
-        .catch(err => {
-            res.status(500).json({
-                error: err
-            })
-        })
-}
-
-
+  Timestamp.findById(req.params.timestampId)
+    .populate("citizen", "-__v") //
+    .exec()
+    .then((timestamp) => {
+      if (!timestamp) {
+        // <-- if timestamp is null.
+        return res.status(404).json({ message: "Timestamp not found" });
+      }
+      return res.status(200).json({
+        timestamp: timestamp,
+      });
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        error: err,
+      });
+    });
+};
 
 /**
  * @swagger
@@ -346,7 +343,7 @@ exports.get_timestamp = (req, res, next) => {
  *   delete:
  *     summary: Delete a timestamp by ID
  *     description: Deletes a single timestamp based on its ID. Only accessible to admin users.
- *     tags: 
+ *     tags:
  *       - Timestamps
  *     security:
  *       - BearerAuth: []
@@ -380,7 +377,7 @@ exports.get_timestamp = (req, res, next) => {
  *                   type: string
  *                   description: Error message
  *       403:
- *         description: Forbidden. Insufficient access rights. 
+ *         description: Forbidden. Insufficient access rights.
  *         content:
  *           application/json:
  *             schema:
@@ -388,7 +385,7 @@ exports.get_timestamp = (req, res, next) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   description: Error message 
+ *                   description: Error message
  *       500:
  *         description: Internal server error
  *         content:
@@ -401,19 +398,19 @@ exports.get_timestamp = (req, res, next) => {
  *                   description: Error object
  */
 exports.delete_timestamp = (req, res, next) => {
-    Timestamp.deleteOne({_id: req.params.timestampId})
+  Timestamp.deleteOne({ _id: req.params.timestampId })
     .exec()
-    .then(result => {
-        res.status(200).json({
-            message: "timestamp deleted",
-        })
+    .then((result) => {
+      return res.status(200).json({
+        message: "timestamp deleted",
+      });
     })
-    .catch(err => {
-        res.status(500).json({
-            error: err
-        })
-    })
-}
+    .catch((err) => {
+      return res.status(500).json({
+        error: err,
+      });
+    });
+};
 
 /**
  * @swagger
@@ -459,7 +456,7 @@ exports.delete_timestamp = (req, res, next) => {
  *                   type: string
  *                   description: Error message
  *       403:
- *         description: Forbidden. Insufficient access rights. 
+ *         description: Forbidden. Insufficient access rights.
  *         content:
  *           application/json:
  *             schema:
@@ -467,9 +464,9 @@ exports.delete_timestamp = (req, res, next) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   description: Error message 
+ *                   description: Error message
  *       404:
- *         description: No timestamps found for the provided citizen ID. 
+ *         description: No timestamps found for the provided citizen ID.
  *         content:
  *           application/json:
  *             schema:
@@ -490,21 +487,23 @@ exports.delete_timestamp = (req, res, next) => {
  *                   description: Error object
  */
 exports.get_timestamps_by_citizenId = (req, res, next) => {
-    Timestamp.find({citizen: req.params.citizenId})
-        .populate('citizen', '-__v') // <-- populate product with all data but the "__v" field.
-        .exec()
-        .then(timestamps => {
-            if(!timestamps || timestamps.length == 0) {
-                res.status(404).json({message: "No timestamps found for the provided citizen"})
-            }
-            res.status(200).json({
-                message: "Succesfully found timestamps related to citizen!", 
-                timestamps: timestamps,
-            })
-        })
-        .catch(err => {
-            res.status(500).json({
-                error: err
-            })
-        })
-}
+  Timestamp.find({ citizen: req.params.citizenId })
+    .populate("citizen", "-__v") // <-- populate product with all data but the "__v" field.
+    .exec()
+    .then((timestamps) => {
+      if (!timestamps || timestamps.length == 0) {
+        return res
+          .status(404)
+          .json({ message: "No timestamps found for the provided citizen" });
+      }
+      return res.status(200).json({
+        message: "Succesfully found timestamps related to citizen!",
+        timestamps: timestamps,
+      });
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        error: err,
+      });
+    });
+};

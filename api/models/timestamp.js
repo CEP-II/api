@@ -1,37 +1,37 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
 const timestampSchema = mongoose.Schema({
-    _id: mongoose.Schema.Types.ObjectId,
+  _id: mongoose.Schema.Types.ObjectId,
 
-    positionId: {
-        type: Number,
-        require: true,
-        min: 0,
-        max: 4,
-        required: true,
-    },
+  positionId: {
+    type: Number,
+    require: true,
+    min: 0,
+    max: 4,
+    required: true,
+  },
 
-    startTime: {
-        type: Date,
-        require: true,
-        // add validator logic here? https://stackoverflow.com/questions/66927667/mongoose-schema-set-min-and-max-dates 
-    },
+  startTime: {
+    type: Date,
+    require: true,
+    // add validator logic here? https://stackoverflow.com/questions/66927667/mongoose-schema-set-min-and-max-dates
+  },
 
-    endTime: {
-        type: Date,
-        require: true
-    },
+  endTime: {
+    type: Date,
+    require: true,
+  },
 
-    deviceId: {
-        type: String,
-        required: true
-    },
-    
-    citizen: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Citizen',
-        required: true,
-    }
-})
+  deviceId: {
+    type: String,
+    required: true,
+  },
 
-module.exports = mongoose.model('Timestamp', timestampSchema)
+  citizen: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Citizen",
+    required: true,
+  },
+});
+
+module.exports = mongoose.model("Timestamp", timestampSchema);

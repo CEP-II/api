@@ -1,10 +1,10 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
-// Middleware factory function
+// authentication function
 function checkRoles(allowedRoles) {
   return (req, res, next) => {
     try {
-      const token = req.headers.authorization.split(' ')[1]; // bearer {token}
+      const token = req.headers.authorization.split(" ")[1]; // bearer {token}
       const decodedToken = jwt.verify(token, process.env.JWT_KEY, null);
       req.userData = decodedToken;
 
@@ -12,10 +12,12 @@ function checkRoles(allowedRoles) {
       if (decodedToken.role && allowedRoles.includes(decodedToken.role)) {
         next();
       } else {
-        return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+        return res
+          .status(403)
+          .json({ message: "Forbidden: Insufficient permissions" });
       }
     } catch (err) {
-      return res.status(401).json({ message: 'Authorization failed' });
+      return res.status(401).json({ message: "Authorization failed" });
     }
   };
 }

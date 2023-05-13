@@ -1,8 +1,8 @@
-const http = require('http') 
-const app = require('./app')
+const http = require("http");
+const app = require("./app");
 
-// unfortunately neither of us have a domain so we will probably just run this on localhost and 
-// expose this as a virtual domain through ngrok or something similar. 
+// unfortunately neither of us have a domain so we will probably just run this on localhost and
+// expose this as a virtual domain through ngrok or something similar.
 
 const port = process.env.port || 3000;
 

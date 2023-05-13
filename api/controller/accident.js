@@ -110,25 +110,32 @@ exports.report_accident = (req, res, next) => {
           message: "device id not found",
         });
 
-      const accident = new Accident({
+      const accidentJSON = {
         _id: new mongoose.Types.ObjectId(),
         deviceId: req.body.deviceId,
         citizen: citizen,
         positionId: req.body.positionId,
         alarmTime: req.body.alarmTime,
-      });
+      };
+      const accident = new Accident({ accidentJSON });
 
-      const client = new twilio(accountSid, authToken);
+      // const client = new twilio(accountSid, authToken);
 
-      // Send SMS using Twilio, this should send an sms
-      client.messages
-        .create({
-          body: `Accident reported by citizen ${citizen._id}. Device ID: ${accident.deviceId}, Position ID: ${accident.positionId}, Alarm Time: ${accident.alarmTime}`,
-          to: numberTo,
-          from: numberFrom, // Your Twilio phone number
-        })
-        .then((message) => console.log(message.sid));
-      // sendAccidentSMS(accident, accountSid, authToken, numberFrom, numberTo);
+      // // Send SMS using Twilio, this should send an sms
+      // client.messages
+      //   .create({
+      //     body: `Accident reported by citizen ${citizen._id}. Device ID: ${accident.deviceId}, Position ID: ${accident.positionId}, Alarm Time: ${accident.alarmTime}`,
+      //     to: numberTo,
+      //     from: numberFrom, // Your Twilio phone number
+      //   })
+      //   .then((message) => console.log(message.sid));
+      sendAccidentSMS(
+        accidentJSON,
+        accountSid,
+        authToken,
+        numberFrom,
+        numberTo
+      );
 
       accident
         .save()

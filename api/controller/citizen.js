@@ -192,6 +192,10 @@ exports.signup = (req, res, next) => {
  *                 token:
  *                   type: string
  *                   description: JWT token
+ *                 id:
+ *                   type: string
+ *                   description: Unique id of citizen
+ *
  *       401:
  *         description: Authorization failed. Incorrect email or password.
  *         content:
@@ -238,9 +242,11 @@ exports.login = (req, res, next) => {
               expiresIn: "1hr",
             }
           );
-          return res
-            .status(200)
-            .json({ message: "Authorization successful", token: token });
+          return res.status(200).json({
+            message: "Authorization successful",
+            token: token,
+            id: citizen._id,
+          });
         }
 
         return res.status(401).json({ message: "Authorization failed" }); // <-- if we get here, password was incorrect.

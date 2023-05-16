@@ -416,8 +416,8 @@ exports.delete_timestamp = (req, res, next) => {
  * @swagger
  * /timestamps/by-citizen/{id}:
  *   get:
- *     summary: Get timestamps by citizen ID
- *     description: Retrieves all timestamps associated with a given citizen ID. Accessible to both citizen and admin users. Pagination is available.
+ *     summary: Get timestamps by ID
+ *     description: Retrieves all timestamps associated with a given citizen or device ID. Accessible to both citizen and admin users. Pagination is available.
  *     tags:
  *       - Timestamps
  *     security:
@@ -528,7 +528,7 @@ exports.get_timestamps_by_id = (req, res, next) => {
       } else {
         if (page && limit) {
           return Timestamp.countDocuments({
-            citizen: req.params.citizenId,
+            $or: [{ citizen: req.params.id }, { deviceId: req.params.id }],
           }).then((totalItems) => {
             const response = {
               currentPage: parseInt(page),

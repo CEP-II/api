@@ -243,26 +243,26 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 // "Some" basic input validation, ensure data is well-formed json.
-app.use([
-  // Check if content type is JSON
-  function (req, res, next) {
-    if (req.is("application/json")) {
-      next();
-    } else {
-      res.status(400).json({ errors: "Content type must be application/json" });
-    }
-  },
-  // Check if incoming JSON is well-formed
-  body("*").isJSON().withMessage("JSON format is not correct"),
-  // Result of validation
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    next();
-  },
-]);
+// app.use([
+//   // Check if content type is JSON
+//   function (req, res, next) {
+//     if (req.is("application/json")) {
+//       next();
+//     } else {
+//       res.status(400).json({ errors: "Content type must be application/json" });
+//     }
+//   },
+//   // Check if incoming JSON is well-formed
+//   body("*").isJSON().withMessage("JSON format is not correct"),
+//   // Result of validation
+//   (req, res, next) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       return res.status(400).json({ errors: errors.array() });
+//     }
+//     next();
+//   },
+// ]);
 
 // Routes which should handle requests
 app.use("/citizen", citizenRoutes);

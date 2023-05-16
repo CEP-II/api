@@ -20,9 +20,9 @@ router.get(
 );
 
 router.get(
-  "/by-citizen/:citizenId",
+  "/by-citizen/:id",
   authorizeRoles(["citizen", "admin"]),
-  TimestampController.get_timestamps_by_citizenId
+  TimestampController.get_timestamps_by_id
 );
 
 router.delete(

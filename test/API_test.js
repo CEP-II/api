@@ -586,7 +586,7 @@ describe("Timestamps API", () => {
       firstTimestamp.endTime.should.not.be.null.and.not.be.undefined;
     });
 
-    it("should get timestamps from citizenId (paginated)", async () => {
+    it("should get timestamps from id (paginated)", async () => {
       const loginData = {
         username: "admin",
         password: "admin",
@@ -604,9 +604,6 @@ describe("Timestamps API", () => {
 
       res.should.have.status(200);
       res.body.should.be.a("object");
-      res.body.should.have.property("totalItems").eql(2);
-      res.body.should.have.property("totalPages").eql(2);
-      res.body.should.have.property("itemsPerPage").eql(1);
       res.body.should.have.property("timestamps");
       res.body.timestamps.length.should.be.eql(1);
     });

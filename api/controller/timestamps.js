@@ -414,7 +414,7 @@ exports.delete_timestamp = (req, res, next) => {
 
 /**
  * @swagger
- * /timestamps/by-citizen/{citizenId}:
+ * /timestamps/by-citizen/{id}:
  *   get:
  *     summary: Get timestamps by citizen ID
  *     description: Retrieves all timestamps associated with a given citizen ID. Accessible to both citizen and admin users. Pagination is available.
@@ -424,7 +424,7 @@ exports.delete_timestamp = (req, res, next) => {
  *       - BearerAuth: []
  *     parameters:
  *       - in: path
- *         name: citizenId
+ *         name: id
  *         schema:
  *           type: string
  *         required: true
@@ -503,7 +503,7 @@ exports.delete_timestamp = (req, res, next) => {
  *                   type: object
  *                   description: Error object
  */
-exports.get_timestamps_by_citizenId = (req, res, next) => {
+exports.get_timestamps_by_id = (req, res, next) => {
   const { page, limit } = req.query;
   let query = {};
 
@@ -512,7 +512,13 @@ exports.get_timestamps_by_citizenId = (req, res, next) => {
     query = { limit: parseInt(limit), skip };
   }
 
-  Timestamp.find({ citizen: req.params.citizenId }, null, query)
+  Timestamp.find(
+    {
+      $or: [{ citizen: req.params.id }, { deviceId: req.params.id }],
+    },
+    null,
+    query
+  )
     .populate("citizen", "-__v")
     .then((timestamps) => {
       if (!timestamps || timestamps.length == 0) {
@@ -551,25 +557,3 @@ exports.get_timestamps_by_citizenId = (req, res, next) => {
       });
     });
 };
-
-// exports.get_timestamps_by_citizenId = (req, res, next) => {
-//   Timestamp.find({ citizen: req.params.citizenId })
-//     .populate("citizen", "-__v") // <-- populate product with all data but the "__v" field.
-//     .exec()
-//     .then((timestamps) => {
-//       if (!timestamps || timestamps.length == 0) {
-//         return res
-//           .status(404)
-//           .json({ message: "No timestamps found for the provided citizen" });
-//       }
-//       return res.status(200).json({
-//         message: "Succesfully found timestamps related to citizen!",
-//         timestamps: timestamps,
-//       });
-//     })
-//     .catch((err) => {
-//       return res.status(500).json({
-//         error: err,
-//       });
-//     });
-// };

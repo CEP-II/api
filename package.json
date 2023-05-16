@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "cross-env NODE_ENV=production nodemon -r dotenv/config server.js",
-    "test": "cross-env NODE_ENV=test mocha --exit \"test/**/*_test.js\""
+    "test": "cross-env NODE_ENV=prod mocha --exit \"test/**/*_test.js\""
   },
   "keywords": [],
   "author": "",

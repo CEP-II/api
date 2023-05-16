@@ -2,6 +2,7 @@
   "env": {
     "MONGO_ATLAS_PW": "nightassist",
     "JWT_KEY": "secret",
+    "NODE_ENV": "production",
     "TWILIO_ACCOUNT_SID": "AC299a3a512a59cccaed410290c9534e75",
     "TWILIO_AUTH_TOKEN": "ec0492df8701e12b545a3355ec0f4701",
     "TWILIO_PHONE_NUMBER": "+12705968524",

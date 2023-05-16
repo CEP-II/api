@@ -232,7 +232,11 @@ mongoose.connect(
 app.use(cors(corsOptions));
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-app.use(morgan("dev")); // <-- log
+
+if (process.env.NODE_ENV !== "test") {
+  // log for anything
+  app.use(morgan("dev")); // <-- log
+}
 
 // Not sure if we want images so this middleware can potentially be deleted as well as the package
 // make folder publically available to get access to images. There are other ways of doing this, e.g. by introducing new routes.

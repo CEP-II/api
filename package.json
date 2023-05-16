@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon -r dotenv/config server.js",
-    "test": "mocha --exit \"test/**/*_test.js\""
+    "start": "cross-env NODE_ENV=production nodemon -r dotenv/config server.js",
+    "test": "cross-env NODE_ENV=test mocha --exit \"test/**/*_test.js\""
   },
   "keywords": [],
   "author": "",
@@ -26,6 +26,7 @@
     "chai": "^4.3.7",
     "chai-exclude": "^2.1.0",
     "chai-http": "^4.3.0",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.0.3",
     "mongodb-memory-server": "^8.12.2",
     "nodemon": "^2.0.20"

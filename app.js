@@ -195,7 +195,6 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
 const express = require("express");
-const { body, validationResult } = require("express-validator");
 const app = express();
 
 const morgan = require("morgan"); // <--- we want all requests to be funneled through morgan to log it.
@@ -241,28 +240,6 @@ app.use("/uploads", express.static("uploads")); // first parameter ensures we on
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
-// "Some" basic input validation, ensure data is well-formed json.
-// app.use([
-//   // Check if content type is JSON
-//   function (req, res, next) {
-//     if (req.is("application/json")) {
-//       next();
-//     } else {
-//       res.status(400).json({ errors: "Content type must be application/json" });
-//     }
-//   },
-//   // Check if incoming JSON is well-formed
-//   body("*").isJSON().withMessage("JSON format is not correct"),
-//   // Result of validation
-//   (req, res, next) => {
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//       return res.status(400).json({ errors: errors.array() });
-//     }
-//     next();
-//   },
-// ]);
 
 // Routes which should handle requests
 app.use("/citizen", citizenRoutes);

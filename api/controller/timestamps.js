@@ -417,7 +417,7 @@ exports.delete_timestamp = (req, res, next) => {
  * /timestamps/by-citizen/{citizenId}:
  *   get:
  *     summary: Get timestamps by citizen ID
- *     description: Retrieves all timestamps associated with a given citizen ID. Accessible to both citizen and admin users.
+ *     description: Retrieves all timestamps associated with a given citizen ID. Accessible to both citizen and admin users. Pagination is available.
  *     tags:
  *       - Timestamps
  *     security:
@@ -430,6 +430,18 @@ exports.delete_timestamp = (req, res, next) => {
  *         required: true
  *         description: The ID of the citizen to retrieve timestamps for
  *         example: '60e2b2a84d53a45e38b58b6c'
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number for pagination
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page for pagination
+ *         example: 10
  *     responses:
  *       200:
  *         description: Successfully found timestamps related to the citizen
@@ -438,9 +450,14 @@ exports.delete_timestamp = (req, res, next) => {
  *             schema:
  *               type: object
  *               properties:
- *                 message:
- *                   type: string
- *                   example: 'Succesfully found timestamps related to citizen!'
+ *                 currentPage:
+ *                   type: integer
+ *                 totalItems:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 itemsPerPage:
+ *                   type: integer
  *                 timestamps:
  *                   type: array
  *                   items:
@@ -487,19 +504,46 @@ exports.delete_timestamp = (req, res, next) => {
  *                   description: Error object
  */
 exports.get_timestamps_by_citizenId = (req, res, next) => {
-  Timestamp.find({ citizen: req.params.citizenId })
-    .populate("citizen", "-__v") // <-- populate product with all data but the "__v" field.
-    .exec()
+  const { page, limit } = req.query;
+  let query = {};
+
+  if (page && limit) {
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    query = { limit: parseInt(limit), skip };
+  }
+
+  Timestamp.find({ citizen: req.params.citizenId }, null, query)
+    .populate("citizen", "-__v")
     .then((timestamps) => {
       if (!timestamps || timestamps.length == 0) {
         return res
           .status(404)
           .json({ message: "No timestamps found for the provided citizen" });
+      } else {
+        if (page && limit) {
+          return Timestamp.countDocuments({
+            citizen: req.params.citizenId,
+          }).then((totalItems) => {
+            const response = {
+              currentPage: parseInt(page),
+              totalItems,
+              totalPages: Math.ceil(totalItems / parseInt(limit)),
+              itemsPerPage: parseInt(limit),
+              timestamps: timestamps,
+            };
+            return res.status(200).send(response);
+          });
+        } else {
+          const response = {
+            currentPage: 1,
+            totalItems: timestamps.length,
+            totalPages: 1,
+            itemsPerPage: timestamps.length,
+            timestamps: timestamps,
+          };
+          return res.status(200).send(response);
+        }
       }
-      return res.status(200).json({
-        message: "Succesfully found timestamps related to citizen!",
-        timestamps: timestamps,
-      });
     })
     .catch((err) => {
       return res.status(500).json({
@@ -507,3 +551,25 @@ exports.get_timestamps_by_citizenId = (req, res, next) => {
       });
     });
 };
+
+// exports.get_timestamps_by_citizenId = (req, res, next) => {
+//   Timestamp.find({ citizen: req.params.citizenId })
+//     .populate("citizen", "-__v") // <-- populate product with all data but the "__v" field.
+//     .exec()
+//     .then((timestamps) => {
+//       if (!timestamps || timestamps.length == 0) {
+//         return res
+//           .status(404)
+//           .json({ message: "No timestamps found for the provided citizen" });
+//       }
+//       return res.status(200).json({
+//         message: "Succesfully found timestamps related to citizen!",
+//         timestamps: timestamps,
+//       });
+//     })
+//     .catch((err) => {
+//       return res.status(500).json({
+//         error: err,
+//       });
+//     });
+// };

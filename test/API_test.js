@@ -585,6 +585,31 @@ describe("Timestamps API", () => {
       firstTimestamp.startTime.should.not.be.null.and.not.be.undefined;
       firstTimestamp.endTime.should.not.be.null.and.not.be.undefined;
     });
+
+    it("should get timestamps from citizenId (paginated)", async () => {
+      const loginData = {
+        username: "admin",
+        password: "admin",
+      };
+      const resToken = await chai
+        .request(app)
+        .post("/admin/login")
+        .send(loginData);
+      const token = resToken.body.token;
+
+      const res = await chai
+        .request(app)
+        .get(`/timestamps/by-citizen/${citizenId1}?page=1&limit=1`)
+        .set("Authorization", `Bearer ${token}`);
+
+      res.should.have.status(200);
+      res.body.should.be.a("object");
+      res.body.should.have.property("totalItems").eql(2);
+      res.body.should.have.property("totalPages").eql(2);
+      res.body.should.have.property("itemsPerPage").eql(1);
+      res.body.should.have.property("timestamps");
+      res.body.timestamps.length.should.be.eql(1);
+    });
   });
 
   describe("GET /", () => {

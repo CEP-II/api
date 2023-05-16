@@ -471,6 +471,7 @@ describe("Timestamps API", () => {
         .request(app)
         .post("/timestamps")
         .send(timestampData);
+
       res.should.have.status(201);
       res.body.should.be.a("object");
       res.body.should.have.property("message").eql("Timestamp stored");

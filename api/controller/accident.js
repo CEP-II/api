@@ -49,7 +49,7 @@ function sendAccidentSMS(
  * /accident:
  *   post:
  *     summary: Report an accident.
- *     description: This endpoint allows for reporting of accidents. It receives a device id and finds the associated citizen. An accident record is created and an SMS is sent.
+ *     description: This endpoint allows for reporting of accidents. It receives a device id and finds the associated citizen. An accident record is created and an SMS is sent to an administrative authority.
  *     tags: [Accidents]
  *     requestBody:
  *       required: true

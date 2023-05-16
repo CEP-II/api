@@ -51,7 +51,7 @@ const citizenSchema = mongoose.Schema({
   password: {
     type: String,
     required: true,
-    // validater logic
+    // validater logic in the future?
   },
 });
 

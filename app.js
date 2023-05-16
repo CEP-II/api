@@ -8,7 +8,7 @@ const swaggerOptions = {
       title: "Night Assist API",
       version: "1.0.0",
       description:
-        "Documentation for Night Assist's API used for data transfer between database and web server. The API follows the production-standard REST principles. Each endpoint has been unit tested: both success scenarios and all but the generic 500 response in case of errors have been tested. The custom middleware for authentication has also been unit tested.",
+        "Documentation for Night Assist's API used for data transfer between database and web server. The API follows the production-standard REST principles. Each endpoint has been unit tested: both success scenarios and all but the generic 500 response in case of 'unhandled' errors have been tested. The custom middleware for authentication has also been unit tested.",
     },
     servers: [
       {
@@ -195,7 +195,9 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
 const express = require("express");
+const { body, validationResult } = require("express-validator");
 const app = express();
+
 const morgan = require("morgan"); // <--- we want all requests to be funneled through morgan to log it.
 const bodyParser = require("body-parser"); // <--- parse the body of incoming requests, othwerwise not nicely formatted
 const mongoose = require("mongoose");
@@ -239,6 +241,28 @@ app.use("/uploads", express.static("uploads")); // first parameter ensures we on
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+// "Some" basic input validation, ensure data is well-formed json.
+app.use([
+  // Check if content type is JSON
+  function (req, res, next) {
+    if (req.is("application/json")) {
+      next();
+    } else {
+      res.status(400).json({ errors: "Content type must be application/json" });
+    }
+  },
+  // Check if incoming JSON is well-formed
+  body("*").isJSON().withMessage("JSON format is not correct"),
+  // Result of validation
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+]);
 
 // Routes which should handle requests
 app.use("/citizen", citizenRoutes);

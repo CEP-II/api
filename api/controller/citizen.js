@@ -17,7 +17,40 @@ const jwt = require("jsonwebtoken"); // <-- library for json webtokens.
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Citizen'
+ *             type: object
+ *             properties:
+ *               birthdate:
+ *                 type: string
+ *                 format: date
+ *                 description: The birthdate of the citizen.
+ *               name:
+ *                 type: string
+ *                 description: The name of the citizen.
+ *               deviceId:
+ *                 type: string
+ *                 description: The unique device ID for the citizen.
+ *               address:
+ *                 type: object
+ *                 properties:
+ *                   postal:
+ *                     type: number
+ *                     description: The postal code of the citizen's address.
+ *                   street:
+ *                     type: string
+ *                     description: The street name of the citizen's address.
+ *                   city:
+ *                     type: string
+ *                     description: The city of the citizen's address.
+ *               phone:
+ *                 type: number
+ *                 description: The phone number of the citizen.
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The email address of the citizen.
+ *               password:
+ *                 type: string
+ *                 description: The password for the citizen's account.
  *     responses:
  *      201:
  *         description: Citizen account created successfully

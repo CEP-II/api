@@ -538,19 +538,21 @@ exports.get_citizen = (req, res, next) => {
  *         description: Unique ID of the citizen
  *         schema:
  *           type: string
- *       - in: body
- *         name: body
- *         required: true
- *         description: Citizen properties to be updated (id fields cannot be updated).
- *         schema:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               propName:
- *                 type: string
- *               value:
- *                 type: string
+ *     consumes:
+ *       - application/json
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 propName:
+ *                   type: string
+ *                 value:
+ *                   type: string
  *     responses:
  *       200:
  *         description: Citizen updated
@@ -611,10 +613,22 @@ exports.get_citizen = (req, res, next) => {
  *               properties:
  *                 error:
  *                   type: string
+ *       default:
+ *         description: Unexpected error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
  */
 exports.patch_citizen = async (req, res, next) => {
   const id = req.params.citizenId;
   const updates = {};
+
+  console.log(req.body);
 
   const citizenSchemaKeys = Object.keys(Citizen.schema.paths);
 
@@ -651,6 +665,7 @@ exports.patch_citizen = async (req, res, next) => {
     }
   }
 
+  console.log(updates);
   Citizen.updateOne({ _id: id }, { $set: updates })
     .exec()
     .then((result) => {

@@ -290,18 +290,21 @@ exports.delete_admin = (req, res, next) => {
  *           type: string
  *         required: true
  *         description: The id of the admin to update
- *       - in: body
- *         name: updates
- *         description: The updates to apply
- *         schema:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               propName:
- *                 type: string
- *               value:
- *                 type: string
+ *     consumes:
+ *       - application/json
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 propName:
+ *                   type: string
+ *                 value:
+ *                   type: string
  *     responses:
  *       200:
  *         description: Admin updated successfully
@@ -363,6 +366,16 @@ exports.delete_admin = (req, res, next) => {
  *                 error:
  *                   type: object
  *                   description: Error object
+ *       default:
+ *         description: Unexpected error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
  */
 exports.patch_admin = async (req, res, next) => {
   const id = req.params.adminId;

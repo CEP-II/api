@@ -15,6 +15,10 @@ const swaggerOptions = {
         url: "http://analogskilte.dk:3000", // temporary for testing use command: ssh -R 80:localhost:3000 serveo.net to generate
         description: "Deployment server",
       },
+      {
+        url: "http://localhost:3000",
+        description: "local",
+      },
     ],
     components: {
       securitySchemes: {
@@ -227,6 +231,8 @@ mongoose.connect(
     process.env.MONGO_ATLAS_PW +
     "@nightassist.ifgd2oi.mongodb.net/?retryWrites=true&w=majority"
 );
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 // middleware below, sequential flow
 app.use(cors(corsOptions));
@@ -241,9 +247,6 @@ if (process.env.NODE_ENV !== "test") {
 // Not sure if we want images so this middleware can potentially be deleted as well as the package
 // make folder publically available to get access to images. There are other ways of doing this, e.g. by introducing new routes.
 app.use("/uploads", express.static("uploads")); // first parameter ensures we only parse requests to the '/uploads' path.
-
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
 
 // Routes which should handle requests
 app.use("/citizen", citizenRoutes);

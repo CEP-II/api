@@ -341,6 +341,8 @@ exports.delete_accident_by_id = (req, res, next) => {
  *     summary: Retrieve a list of accidents by citizen ID
  *     description: Retrieve a list of accidents for a specific citizen. Allows for pagination.
  *     tags: [Accidents]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: citizenId

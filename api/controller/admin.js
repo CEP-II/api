@@ -370,8 +370,24 @@ exports.patch_admin = async (req, res, next) => {
 
   const adminSchemaKeys = Object.keys(Admin.schema.paths);
 
+  let updatesArray = [];
+
   // Find the list of changes to make.
-  for (const update of req.body) {
+  if (Array.isArray(req.body)) {
+    updatesArray = req.body;
+  } else if (typeof req.body === "object" && req.body !== null) {
+    updatesArray = Object.entries(req.body).map(([propName, value]) => ({
+      propName,
+      value,
+    }));
+  } else {
+    return res.status(400).json({
+      message: "Invalid request body. It should be an array or object",
+    });
+  }
+
+  // Find the list of changes to make.
+  for (const update of updatesArray) {
     if (!adminSchemaKeys.includes(update.propName)) {
       return res.status(400).json({
         message: "Invalid propName",

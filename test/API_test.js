@@ -999,6 +999,56 @@ describe("Accident API", () => {
     });
   });
 
+  describe("GET /by-citizen/:citizenId", () => {
+    it("should get all accidents related to a citizenId (no pagination)", async () => {
+      const loginData = {
+        username: "admin",
+        password: "admin",
+      };
+      const resToken = await chai
+        .request(app)
+        .post("/admin/login")
+        .send(loginData);
+      const token = resToken.body.token;
+
+      const res = await chai
+        .request(app)
+        .get(`/accident/by-citizen/${citizenId1}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      res.should.have.status(200);
+      res.should.be.json;
+      res.body.should.be.a("object"); // Change this from 'array' to 'object'
+      res.body.should.have.property("accidents"); // Check that the 'accidents' property exists
+      res.body.accidents.should.be.a("array"); // Check that the 'accidents' property is an array
+      res.body.accidents.length.should.be.eql(1);
+    });
+
+    it("should get all accidents related to a citizenId (no pagination)", async () => {
+      const loginData = {
+        username: "admin",
+        password: "admin",
+      };
+      const resToken = await chai
+        .request(app)
+        .post("/admin/login")
+        .send(loginData);
+      const token = resToken.body.token;
+
+      const res = await chai
+        .request(app)
+        .get(`/accident/by-citizen/${citizenId1}?page=1&limit=1`)
+        .set("Authorization", `Bearer ${token}`);
+
+      res.should.have.status(200);
+      res.should.be.json;
+      res.body.should.be.a("object"); // Change this from 'array' to 'object'
+      res.body.should.have.property("accidents"); // Check that the 'accidents' property exists
+      res.body.accidents.should.be.a("array"); // Check that the 'accidents' property is an array
+      res.body.accidents.length.should.be.eql(1);
+    });
+  });
+
   describe("DELETE /:accidentId", () => {
     it("should delete an accident by its Id", async () => {
       const loginData = {

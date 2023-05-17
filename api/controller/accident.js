@@ -333,3 +333,136 @@ exports.delete_accident_by_id = (req, res, next) => {
       return res.status(500).json({ error: err });
     });
 };
+
+/**
+ * @swagger
+ * /accident/by-citizen/{citizenId}:
+ *   get:
+ *     summary: Retrieve a list of accidents by citizen ID
+ *     description: Retrieve a list of accidents for a specific citizen. Allows for pagination.
+ *     tags: [Accidents]
+ *     parameters:
+ *       - in: path
+ *         name: citizenId
+ *         required: true
+ *         description: Unique ID of the citizen
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: The page number to return
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: The number of items per page
+ *     responses:
+ *       200:
+ *         description: A list of accidents by citizen ID, along with pagination details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 currentPage:
+ *                   type: integer
+ *                 totalItems:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 itemsPerPage:
+ *                   type: integer
+ *                 accidents:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Accident'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       403:
+ *         description: Forbidden. Insufficient access rights.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       404:
+ *         description: No accidents found for the provided citizen
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: No accidents found for the provided citizen
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
+exports.get_accidents_by_citizenId = (req, res, next) => {
+  const { page, limit } = req.query;
+  let query = {};
+
+  if (page && limit) {
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    query = { limit: parseInt(limit), skip };
+  }
+
+  Accident.find({ citizen: req.params.citizenId }, null, query)
+    .populate("citizen", "-__v")
+    .then((accidents) => {
+      if (!accidents || accidents.length == 0) {
+        return res
+          .status(404)
+          .json({ message: "No accidents found for the provided citizen" });
+      } else {
+        if (page && limit) {
+          return Accident.countDocuments({ citizen: req.params.id }).then(
+            (totalItems) => {
+              const response = {
+                currentPage: parseInt(page),
+                totalItems,
+                totalPages: Math.ceil(totalItems / parseInt(limit)),
+                itemsPerPage: parseInt(limit),
+                accidents: accidents,
+              };
+              return res.status(200).send(response);
+            }
+          );
+        } else {
+          const response = {
+            currentPage: 1,
+            totalItems: accidents.length,
+            totalPages: 1,
+            itemsPerPage: accidents.length,
+            accidents: accidents,
+          };
+          return res.status(200).send(response);
+        }
+      }
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        error: err,
+      });
+    });
+};

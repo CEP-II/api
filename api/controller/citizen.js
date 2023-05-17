@@ -524,29 +524,36 @@ exports.get_citizen = (req, res, next) => {
 
 /**
  * @swagger
- * /citizen/login:
- *   post:
- *     summary: Log in a citizen
+ * /citizen/{citizenId}:
+ *   patch:
+ *     summary: Updates a citizen's information
+ *     description: Updates a citizen's information by citizenId. Requires admin authorization. Id fields cannot be updated.
  *     tags: [Citizen]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: citizenId
+ *         required: true
+ *         description: Unique ID of the citizen
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         description: Citizen properties to be updated (id fields cannot be updated).
+ *         schema:
+ *           type: array
+ *           items:
  *             type: object
  *             properties:
- *               email:
+ *               propName:
  *                 type: string
- *                 description: Email address of the citizen
- *               password:
+ *               value:
  *                 type: string
- *                 description: Password of the citizen
- *             required:
- *               - email
- *               - password
  *     responses:
  *       200:
- *         description: Authorization successful
+ *         description: Citizen updated
  *         content:
  *           application/json:
  *             schema:
@@ -554,12 +561,29 @@ exports.get_citizen = (req, res, next) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   description: Success message
- *                 token:
+ *                   example: Citizen updated
+ *       204:
+ *         description: No content changed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
  *                   type: string
- *                   description: JWT token
+ *                   example: No content changed
+ *       400:
+ *         description: Invalid propName or attempt to update id
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid propName
  *       401:
- *         description: Authorization failed. Incorrect email or password.
+ *         description: Unauthorized
  *         content:
  *           application/json:
  *             schema:
@@ -579,15 +603,14 @@ exports.get_citizen = (req, res, next) => {
  *                   type: string
  *                   description: Error message
  *       500:
- *         description: Internal server error
+ *         description: Server error
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
  *                 error:
- *                   type: object
- *                   description: Error object
+ *                   type: string
  */
 exports.patch_citizen = async (req, res, next) => {
   const id = req.params.citizenId;
@@ -597,7 +620,11 @@ exports.patch_citizen = async (req, res, next) => {
 
   // Find the list of changes to make.
   for (const update of req.body) {
-    if (!citizenSchemaKeys.includes(update.propName)) {
+    if (
+      !citizenSchemaKeys.includes(update.propName) ||
+      update.propName === "id" ||
+      update.propName === "_id"
+    ) {
       return res.status(400).json({
         message: "Invalid propName",
       });

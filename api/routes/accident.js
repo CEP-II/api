@@ -18,4 +18,10 @@ router.delete(
   accidentController.delete_accident_by_id
 );
 
+router.get(
+  "/by-citizen/:citizenId",
+  authorizeRoles(["citizen", "admin"]),
+  accidentController.get_accidents_by_citizenId
+);
+
 module.exports = router;

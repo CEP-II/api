@@ -15,10 +15,6 @@ const swaggerOptions = {
         url: "http://analogskilte.dk:3000", // temporary for testing use command: ssh -R 80:localhost:3000 serveo.net to generate
         description: "Deployment server",
       },
-      {
-        url: "http://localhost:3000",
-        description: "local",
-      },
     ],
     components: {
       securitySchemes: {

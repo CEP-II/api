@@ -628,8 +628,6 @@ exports.patch_citizen = async (req, res, next) => {
   const id = req.params.citizenId;
   const updates = {};
 
-  console.log(req.body);
-
   const citizenSchemaKeys = Object.keys(Citizen.schema.paths);
 
   let updatesArray = [];
@@ -665,7 +663,6 @@ exports.patch_citizen = async (req, res, next) => {
     }
   }
 
-  console.log(updates);
   Citizen.updateOne({ _id: id }, { $set: updates })
     .exec()
     .then((result) => {
